@@ -1,21 +1,32 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { Image } from "expo-image";
+import { Platform, StyleSheet, View, Button, Text } from "react-native";
+import { HelloWave } from "@/components/HelloWave";
+import ParallaxScrollView from "@/components/ParallaxScrollView";
+import { ThemedText } from "@/components/ThemedText";
+import { ThemedView } from "@/components/ThemedView";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { isAuthenticated, logout } = useAuth();
+
+  const handleLogout = () => {
+    console.log("🚪 Logout button pressed - navigating to landing");
+    logout();
+    router.replace("/landing");
+  };
+
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
       headerImage={
         <Image
-          source={require('@/assets/images/partial-react-logo.png')}
+          source={require("@/assets/images/partial-react-logo.png")}
           style={styles.reactLogo}
         />
-      }>
+      }
+    >
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
@@ -23,15 +34,16 @@ export default function HomeScreen() {
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
+          Edit{" "}
+          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
+          to see changes. Press{" "}
           <ThemedText type="defaultSemiBold">
             {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
+              ios: "cmd + d",
+              android: "cmd + m",
+              web: "F12",
             })}
-          </ThemedText>{' '}
+          </ThemedText>{" "}
           to open developer tools.
         </ThemedText>
       </ThemedView>
@@ -45,20 +57,41 @@ export default function HomeScreen() {
         <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
         <ThemedText>
           {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
+          <ThemedText type="defaultSemiBold">
+            npm run reset-project
+          </ThemedText>{" "}
+          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
+          directory. This will move the current{" "}
+          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
       </ThemedView>
+      <View style={styles.buttonContainer}>
+        <Button
+          title="Logout (Go to Landing)"
+          onPress={handleLogout}
+          color="#ff4444"
+        />
+      </View>
+
+      <View style={styles.debugContainer}>
+        <Text style={styles.debugText}>Debug Info:</Text>
+        <Text style={styles.debugText}>
+          You are in the authenticated tabs area
+        </Text>
+        <Text style={styles.debugText}>Click logout to go back to landing</Text>
+        <Text style={styles.debugText}>
+          Authentication State: {isAuthenticated ? "TRUE" : "FALSE"}
+        </Text>
+      </View>
     </ParallaxScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
   stepContainer: {
@@ -70,6 +103,39 @@ const styles = StyleSheet.create({
     width: 290,
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    position: "absolute",
+  },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#fff",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
+    marginBottom: 40,
+  },
+  buttonContainer: {
+    marginVertical: 20,
+    width: "100%",
+  },
+  debugContainer: {
+    marginTop: 40,
+    padding: 20,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    width: "100%",
+  },
+  debugText: {
+    fontSize: 14,
+    fontFamily: "SpaceMono",
+    marginBottom: 4,
   },
 });
