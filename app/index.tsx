@@ -1,36 +1,32 @@
-import { useEffect } from "react";
-import { useRouter, usePathname } from "expo-router"; // ✅ usePathname added
-import { useAuth } from "@/contexts/AuthContext";
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+"use client"
+
+import { useAuth } from "@/contexts/AuthContext"
+import { View, Text, ActivityIndicator, StyleSheet } from "react-native"
+import { useEffect } from "react"
+import { useRouter } from "expo-router"
 
 export default function IndexScreen() {
-  const { isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname(); // ✅ track current route
+  const { isAuthenticated } = useAuth()
+  const router = useRouter()
 
   useEffect(() => {
-    if (isLoading || pathname !== "/") return; // ✅ prevent redirect if not on root
-
+    // Set a timeout to navigate to landing screen after 3 seconds
     const timer = setTimeout(() => {
-      if (isAuthenticated) {
-        router.replace("/(tabs)");
-      } else {
-        router.replace("/landing");
-      }
-    }, 100);
+      router.replace("/landing")
+    }, 3000)
 
-    return () => clearTimeout(timer);
-  }, [isAuthenticated, isLoading, pathname, router]);
+    // Clear the timeout if the component unmounts
+    return () => clearTimeout(timer)
+  }, [router])
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator size="large" color="#0000ff" />
+      <Text style={styles.appName}>TheDot</Text>
+      <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
       <Text style={styles.loadingText}>Loading...</Text>
-      <Text style={styles.debugText}>
-        Auth State: {isAuthenticated ? "Authenticated" : "Not Authenticated"}
-      </Text>
+      <Text style={styles.debugText}>Auth State: {isAuthenticated ? "Authenticated" : "Not Authenticated"}</Text>
     </View>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -39,6 +35,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f5f5f5",
+  },
+  appName: {
+    fontSize: 32,
+    fontWeight: "bold",
+    marginBottom: 20,
+  },
+  loader: {
+    marginTop: 10,
   },
   loadingText: {
     marginTop: 10,
@@ -50,4 +54,4 @@ const styles = StyleSheet.create({
     color: "#666",
     fontFamily: "SpaceMono",
   },
-});
+})

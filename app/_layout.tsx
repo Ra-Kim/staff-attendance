@@ -8,9 +8,10 @@ import { useFonts } from "expo-font";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import React from "react";
-import { Stack } from "expo-router";
+import React, { useEffect } from "react";
+import { Stack, useRouter } from "expo-router";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { auth } from "@/backend/firebase";
 
 function LayoutRouter() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -20,6 +21,17 @@ function LayoutRouter() {
     SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
   });
 
+  const router = useRouter();
+  useEffect(() => {
+    if (isLoading) return; // ✅ prevent redirect if loading
+    const isAuth = auth.currentUser
+    if (isAuthenticated && isAuth) {
+      router.replace("/(tabs)");
+    } else {
+      router.replace("/");
+    }
+  }, [isAuthenticated, isLoading, router]);
+
   if (!loaded || isLoading) return null;
 
   return (
@@ -28,13 +40,14 @@ function LayoutRouter() {
       <Stack>
         {isAuthenticated ? (
           <>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="+not-found" />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="+not-found" />
           </>
         ) : (
           <>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="landing" options={{ headerShown: false }} />
+            <Stack.Screen name="signup" options={{ headerShown: false }} />
           </>
         )}
       </Stack>

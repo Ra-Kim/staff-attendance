@@ -5,16 +5,14 @@ import ParallaxScrollView from "@/components/ParallaxScrollView";
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "expo-router";
 
 export default function HomeScreen() {
-  const router = useRouter();
   const { isAuthenticated, logout } = useAuth();
 
   const handleLogout = () => {
     console.log("🚪 Logout button pressed - navigating to landing");
     logout();
-    router.replace("/landing");
+   
   };
 
   return (
