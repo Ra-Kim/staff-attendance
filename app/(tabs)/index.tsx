@@ -1,139 +1,278 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet, View, Button, Text } from "react-native";
-import { HelloWave } from "@/components/HelloWave";
-import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
-import { useAuth } from "@/contexts/AuthContext";
+"use client"
+
+import { useState, useEffect } from "react"
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, SafeAreaView, Alert } from "react-native"
+import { useAuth } from "@/contexts/AuthContext"
+import QRCode from "react-native-qrcode-svg"
+
+interface QRCodeData {
+  id: string
+  code: string
+  timestamp: Date
+  isActive: boolean
+}
 
 export default function HomeScreen() {
-  const { isAuthenticated, logout } = useAuth();
+  const { user } = useAuth()
+  const [currentQRCode, setCurrentQRCode] = useState<QRCodeData | null>(null)
+  const [pastQRCodes, setPastQRCodes] = useState<QRCodeData[]>([])
+  const [userQRCode, setUserQRCode] = useState<string>("")
 
-  const handleLogout = () => {
-    console.log("🚪 Logout button pressed - navigating to landing");
-    logout();
-   
-  };
+  useEffect(() => {
+    // Initialize user's permanent QR code
+    if (!user?.isAdmin) {
+      setUserQRCode(`USER_${user?.uid}_${Date.now()}`)
+    }
+  }, [user])
 
+  const generateQRCode = () => {
+    if (!user?.isAdmin) return
+
+    const newQRCode: QRCodeData = {
+      id: Math.random().toString(36).substr(2, 9),
+      code: `ATTENDANCE_${Date.now()}`,
+      timestamp: new Date(),
+      isActive: true,
+    }
+
+    // Deactivate current QR code and add to past codes
+    if (currentQRCode) {
+      const deactivatedCode = { ...currentQRCode, isActive: false }
+      setPastQRCodes((prev) => [deactivatedCode, ...prev.slice(0, 2)])
+    }
+
+    setCurrentQRCode(newQRCode)
+    Alert.alert("Success", "New QR code generated!")
+  }
+
+  const handleScanQR = () => {
+    // This would typically open camera for QR scanning
+    Alert.alert("Scan QR", "QR Scanner would open here")
+  }
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  }
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString()
+  }
+
+  if (user?.isAdmin) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Admin Dashboard</Text>
+            <Text style={styles.subtitle}>Manage attendance QR codes</Text>
+          </View>
+
+          {/* Generate QR Code Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Generate QR Code</Text>
+            <TouchableOpacity style={styles.generateButton} onPress={generateQRCode}>
+              <Text style={styles.generateButtonText}>Generate New QR Code</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Current QR Code */}
+          {currentQRCode && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Current QR Code</Text>
+              <View style={styles.qrContainer}>
+                <QRCode value={currentQRCode.code} size={200} color="#000000" backgroundColor="#FFFFFF" />
+                <Text style={styles.qrInfo}>Generated: {formatTime(currentQRCode.timestamp)}</Text>
+                <Text style={styles.qrCode}>Code: {currentQRCode.id}</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Scan QR Code */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Scan QR Code</Text>
+            <TouchableOpacity style={styles.scanButton} onPress={handleScanQR}>
+              <Text style={styles.scanButtonText}>📱 Scan QR Code</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Past QR Codes */}
+          {pastQRCodes.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Recent QR Codes</Text>
+              {pastQRCodes.map((qr, index) => (
+                <View key={qr.id} style={styles.pastQRItem}>
+                  <View style={styles.pastQRInfo}>
+                    <Text style={styles.pastQRCode}>Code: {qr.id}</Text>
+                    <Text style={styles.pastQRTime}>
+                      {formatDate(qr.timestamp)} at {formatTime(qr.timestamp)}
+                    </Text>
+                  </View>
+                  <View style={styles.statusBadge}>
+                    <Text style={styles.statusText}>Expired</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    )
+  }
+
+  // User View
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
-            })}
-          </ThemedText>{" "}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">
-            npm run reset-project
-          </ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Logout (Go to Landing)"
-          onPress={handleLogout}
-          color="#ff4444"
-        />
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Welcome Back!</Text>
+          <Text style={styles.subtitle}>Your attendance dashboard</Text>
+        </View>
 
-      <View style={styles.debugContainer}>
-        <Text style={styles.debugText}>Debug Info:</Text>
-        <Text style={styles.debugText}>
-          You are in the authenticated tabs area
-        </Text>
-        <Text style={styles.debugText}>Click logout to go back to landing</Text>
-        <Text style={styles.debugText}>
-          Authentication State: {isAuthenticated ? "TRUE" : "FALSE"}
-        </Text>
-      </View>
-    </ParallaxScrollView>
-  );
+        {/* User's Permanent QR Code */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Your QR Code</Text>
+          <Text style={styles.qrDescription}>Show this QR code to mark your attendance</Text>
+          <View style={styles.qrContainer}>
+            <QRCode value={userQRCode} size={200} color="#000000" backgroundColor="#FFFFFF" />
+            <Text style={styles.qrInfo}>Your unique attendance code</Text>
+          </View>
+        </View>
+
+        {/* Scan QR Code */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Scan Attendance</Text>
+          <Text style={styles.qrDescription}>{`Scan the admin's QR code to mark your attendance`}</Text>
+          <TouchableOpacity style={styles.scanButton} onPress={handleScanQR}>
+            <Text style={styles.scanButtonText}>📱 Scan QR Code</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  )
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: "absolute",
-  },
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+  },
+  scrollContent: {
+    flexGrow: 1,
     padding: 20,
-    backgroundColor: "#fff",
+  },
+  header: {
+    marginBottom: 30,
+    paddingTop: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
-    marginBottom: 8,
+    color: "#000000",
+    marginBottom: 5,
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
-    marginBottom: 40,
+    color: "#666666",
   },
-  buttonContainer: {
-    marginVertical: 20,
-    width: "100%",
-  },
-  debugContainer: {
-    marginTop: 40,
+  section: {
+    marginBottom: 30,
     padding: 20,
-    backgroundColor: "#f0f0f0",
-    borderRadius: 8,
-    width: "100%",
+    backgroundColor: "#F8F8F8",
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
   },
-  debugText: {
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 15,
+  },
+  qrDescription: {
     fontSize: 14,
-    fontFamily: "SpaceMono",
-    marginBottom: 4,
+    color: "#666666",
+    marginBottom: 15,
+    textAlign: "center",
   },
-});
+  generateButton: {
+    backgroundColor: "#000000",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  generateButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  scanButton: {
+    backgroundColor: "#F0F0F0",
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#000000",
+  },
+  scanButtonText: {
+    color: "#000000",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  qrContainer: {
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  qrInfo: {
+    marginTop: 15,
+    fontSize: 14,
+    color: "#666666",
+    textAlign: "center",
+  },
+  qrCode: {
+    marginTop: 5,
+    fontSize: 12,
+    color: "#999999",
+    textAlign: "center",
+  },
+  pastQRItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  pastQRInfo: {
+    flex: 1,
+  },
+  pastQRCode: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#000000",
+  },
+  pastQRTime: {
+    fontSize: 12,
+    color: "#666666",
+    marginTop: 2,
+  },
+  statusBadge: {
+    backgroundColor: "#FFE6E6",
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 15,
+  },
+  statusText: {
+    fontSize: 12,
+    color: "#CC0000",
+    fontWeight: "bold",
+  },
+})

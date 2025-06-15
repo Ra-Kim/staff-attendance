@@ -84,6 +84,8 @@ export default function LandingScreen() {
 
         const uid = userCredential.user.uid;
 
+        console.log(uid)
+
         // ✅ Search all users across all businesses
         const usersQuery = query(
           collectionGroup(db, "users"),

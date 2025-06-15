@@ -24,7 +24,7 @@ function LayoutRouter() {
   const router = useRouter();
   useEffect(() => {
     if (isLoading) return; // ✅ prevent redirect if loading
-    const isAuth = auth.currentUser
+    const isAuth = !!auth.currentUser
     if (isAuthenticated && isAuth) {
       router.replace("/(tabs)");
     } else {

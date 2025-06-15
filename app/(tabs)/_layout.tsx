@@ -10,10 +10,14 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
- const {user} = useAuth()
+  const { user } = useAuth();
+  useEffect(() => {
+    console.log(user?.isAdmin);
+  }, [user]);
   return (
     <ProtectedRoute>
       <Tabs
