@@ -18,8 +18,15 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { auth, db } from "@/backend/firebase";
 import { router } from "expo-router";
-import { collectionGroup, getDocs, query, where } from "firebase/firestore";
-import { IUser } from "@/types";
+import {
+  collectionGroup,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
+import { IBusiness, IUser } from "@/types";
 
 export default function LandingScreen() {
   const { login } = useAuth();
@@ -84,8 +91,6 @@ export default function LandingScreen() {
 
         const uid = userCredential.user.uid;
 
-        console.log(uid)
-
         // ✅ Search all users across all businesses
         const usersQuery = query(
           collectionGroup(db, "users"),
@@ -101,11 +106,30 @@ export default function LandingScreen() {
         // ✅ Assuming user belongs to exactly one business
         const userDocSnap = querySnapshot.docs[0];
         const userData = userDocSnap.data() as IUser;
-        console.log(userData);
+
+        // ✅ Extract businessId from the user doc path
+        // Path format: businesses/{businessId}/users/{uid}
+        const pathSegments = userDocSnap.ref.path.split("/");
+        const businessId = pathSegments[1]; // index 0 = "businesses", 1 = businessId
+
+        // ✅ Optional: Fetch full business document
+        const businessDocRef = doc(db, "businesses", businessId);
+        const businessDocSnap = await getDoc(businessDocRef);
+
+        const businessData = businessDocSnap.exists()
+          ? businessDocSnap.data()
+          : null;
+
+        // ✅ Pass userData and businessData to context
 
         // ✅ Pass to context
         setLoading(false);
-        login(userData);
+        login({
+          ...userData,
+          uid,
+          businessId,
+          business: businessData as IBusiness,
+        });
       } catch (error) {
         console.log(error);
         let errorMessage =

@@ -12,6 +12,8 @@ import React, { useEffect } from "react";
 import { Stack, useRouter } from "expo-router";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { auth } from "@/backend/firebase";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { Provider } from "react-native-paper";
 
 function LayoutRouter() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,7 +26,7 @@ function LayoutRouter() {
   const router = useRouter();
   useEffect(() => {
     if (isLoading) return; // ✅ prevent redirect if loading
-    const isAuth = !!auth.currentUser
+    const isAuth = !!auth.currentUser;
     if (isAuthenticated && isAuth) {
       router.replace("/(tabs)");
     } else {
@@ -58,7 +60,11 @@ function LayoutRouter() {
 export default function RootLayoutScreen() {
   return (
     <AuthProvider>
-      <LayoutRouter />
+      <Provider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <LayoutRouter />
+        </GestureHandlerRootView>
+      </Provider>
     </AuthProvider>
   );
 }

@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryAddUsageDescription": "This app needs access to save QR codes to your photo library",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to save QR codes"
+      }
     },
     "android": {
       "adaptiveIcon": {
