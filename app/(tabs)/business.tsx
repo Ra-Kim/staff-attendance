@@ -1,15 +1,159 @@
-"use client"
-import { View, Text, StyleSheet, SafeAreaView } from "react-native"
+"use client";
+
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface BusinessMenuItem {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  route: string;
+  subItems?: BusinessMenuItem[];
+}
 
 export default function BusinessScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const businessMenuItems: BusinessMenuItem[] = [
+    {
+      id: "users",
+      title: "Users",
+      subtitle: "Manage employees and user accounts",
+      icon: "👥",
+      route: "/business/users",
+    },
+    {
+      id: "business-info",
+      title: "Business Information",
+      subtitle: "View and edit business profile",
+      icon: "🏢",
+      route: "/business/info",
+    },
+    {
+      id: "overview",
+      title: "Overview",
+      subtitle: "Business dashboard and summary",
+      icon: "📊",
+      route: "/business/overview",
+    },
+    {
+      id: "reports",
+      title: "Reports",
+      subtitle: "Attendance reports and analytics",
+      icon: "📈",
+      route: "/business/reports",
+      subItems: [
+        {
+          id: "general-records",
+          title: "General Attendance Records",
+          subtitle: "View all attendance data",
+          icon: "📋",
+          route: "/business/reports/general",
+        },
+        {
+          id: "user-reports",
+          title: "User Reports",
+          subtitle: "Individual employee reports",
+          icon: "👤",
+          route: "/business/reports/users",
+        },
+        {
+          id: "best-performers",
+          title: "Best Performers",
+          subtitle: "Top performing employees",
+          icon: "🏆",
+          route: "/business/reports/best",
+        },
+        {
+          id: "worst-performers",
+          title: "Worst Performers",
+          subtitle: "Employees needing attention",
+          icon: "⚠️",
+          route: "/business/reports/worst",
+        },
+      ],
+    },
+    {
+      id: "analytics",
+      title: "Analytics",
+      subtitle: "Advanced business insights",
+      icon: "📊",
+      route: "/business/analytics",
+    },
+  ];
+
+  const handleMenuPress = (route: string) => {
+    router.push(route as any);
+  };
+
+  const renderMenuItem = (item: BusinessMenuItem, isSubItem = false) => (
+    <View
+      key={item.id}
+      style={[styles.menuItem, isSubItem && styles.subMenuItem]}
+    >
+      <TouchableOpacity
+        style={styles.menuButton}
+        onPress={() => handleMenuPress(item.route)}
+      >
+        <View style={styles.menuContent}>
+          <View style={styles.menuLeft}>
+            <Text style={styles.menuIcon}>{item.icon}</Text>
+            <View style={styles.menuText}>
+              <Text
+                style={[styles.menuTitle, isSubItem && styles.subMenuTitle]}
+              >
+                {item.title}
+              </Text>
+              <Text
+                style={[
+                  styles.menuSubtitle,
+                  isSubItem && styles.subMenuSubtitle,
+                ]}
+              >
+                {item.subtitle}
+              </Text>
+            </View>
+          </View>
+          <Text style={styles.menuArrow}>›</Text>
+        </View>
+      </TouchableOpacity>
+
+      {/* Render sub-items if they exist */}
+      {item.subItems && (
+        <View style={styles.subItemsContainer}>
+          {item.subItems.map((subItem) => renderMenuItem(subItem, true))}
+        </View>
+      )}
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.title}>Business Management</Text>
-        <Text style={styles.subtitle}>Business settings and management tools</Text>
-      </View>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Business Management</Text>
+          <Text style={styles.subtitle}>Manage your business operations</Text>
+          <Text style={styles.businessName}>
+            {user?.business?.business_name || "Your Business"}
+          </Text>
+        </View>
+
+        <View style={styles.menuContainer}>
+          {businessMenuItems.map((item) => renderMenuItem(item))}
+        </View>
+      </ScrollView>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -17,21 +161,103 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#FFFFFF",
   },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+  scrollContent: {
+    flexGrow: 1,
+  },
+  header: {
     padding: 20,
+    paddingTop: 40,
+    backgroundColor: "#F8F8F8",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
     color: "#000000",
-    marginBottom: 10,
+    marginBottom: 5,
   },
   subtitle: {
     fontSize: 16,
     color: "#666666",
-    textAlign: "center",
+    marginBottom: 10,
   },
-})
+  businessName: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#000000",
+  },
+  menuContainer: {
+    padding: 20,
+  },
+  menuItem: {
+    marginBottom: 15,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  subMenuItem: {
+    marginBottom: 8,
+    marginLeft: 20,
+    backgroundColor: "#F8F8F8",
+    borderColor: "#D0D0D0",
+    shadowOpacity: 0.05,
+    elevation: 2,
+  },
+  menuButton: {
+    padding: 20,
+  },
+  menuContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  menuLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    flex: 1,
+  },
+  menuIcon: {
+    fontSize: 24,
+    marginRight: 15,
+  },
+  menuText: {
+    flex: 1,
+  },
+  menuTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 4,
+  },
+  subMenuTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  menuSubtitle: {
+    fontSize: 14,
+    color: "#666666",
+  },
+  subMenuSubtitle: {
+    fontSize: 13,
+    color: "#777777",
+  },
+  menuArrow: {
+    fontSize: 20,
+    color: "#CCCCCC",
+    fontWeight: "bold",
+  },
+  subItemsContainer: {
+    paddingTop: 10,
+    paddingBottom: 10,
+  },
+});
