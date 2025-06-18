@@ -12,16 +12,20 @@ export default function IndexScreen() {
   useEffect(() => {
     // Set a timeout to navigate to landing screen after 3 seconds
     const timer = setTimeout(() => {
-      router.replace("/landing");
+      if (isAuthenticated) {
+        router.replace("/(tabs)");
+      } else {
+        router.replace("/landing");
+      }
     }, 3000);
 
     // Clear the timeout if the component unmounts
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, isAuthenticated]);
 
   return (
     <>
-      <Stack.Screen options={{ title: "Welcome" }} />
+      <Stack.Screen options={{ title: "Welcome", headerBackVisible: false }} />
       <View style={styles.container}>
         <Text style={styles.appName}>TheDot</Text>
         <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />

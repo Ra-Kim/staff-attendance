@@ -143,7 +143,7 @@ export default function LandingScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "Login" }} />
+      <Stack.Screen options={{ title: "Login", headerBackVisible: false }} />
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}

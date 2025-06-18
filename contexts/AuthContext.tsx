@@ -6,12 +6,14 @@ import React, {
   ReactNode,
   useEffect,
 } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: IUser | null;
-  login: (userData:IUser) => void;
+  login: (userData: IUser) => void;
   logout: () => void;
   toggleAuth: () => void;
 }
@@ -34,35 +36,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<IUser | null>(null);
+  const router = useRouter();
 
-  // Simulate loading (e.g. checking async storage or some token)
+  // Load from AsyncStorage on initial mount
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000); // simulate 1s delay
+    const loadAuthState = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem("auth_user");
+        const storedAuth = await AsyncStorage.getItem("is_authenticated");
 
-    return () => clearTimeout(timeout);
+        if (storedUser && storedAuth === "true") {
+          setUser(JSON.parse(storedUser));
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error("Error loading auth state:", error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAuthState();
   }, []);
 
-  const login = (userData: IUser) => {
-    console.log("🔐 User logged in");
-    setIsAuthenticated(true);
+  const login = async (userData: IUser) => {
     setUser(userData);
+    setIsAuthenticated(true);
+    await AsyncStorage.setItem("auth_user", JSON.stringify(userData));
+    await AsyncStorage.setItem("is_authenticated", "true");
+    router.replace("/(tabs)")
   };
 
-  const logout = () => {
-    console.log("🚪 User logged out");
+  const logout = async () => {
+    setUser(null);
     setIsAuthenticated(false);
+    await AsyncStorage.removeItem("auth_user");
+    await AsyncStorage.removeItem("is_authenticated");
   };
 
   const toggleAuth = () => {
-    console.log(
-      "🔄 Toggling auth state from",
-      isAuthenticated,
-      "to",
-      !isAuthenticated
-    );
-    setIsAuthenticated(!isAuthenticated);
+    const newState = !isAuthenticated;
+    setIsAuthenticated(newState);
+    AsyncStorage.setItem("is_authenticated", newState ? "true" : "false");
   };
 
   return (

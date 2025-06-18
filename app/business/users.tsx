@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   View,
@@ -14,48 +14,49 @@ import {
   Platform,
   Switch,
   ActivityIndicator,
-} from "react-native"
-import { Stack } from "expo-router"
-import AppHeader from "@/components/AppHeader"
-import type { IUser, UserFormData, FormErrors, IUserBody } from "@/types"
-import { useEffect, useState } from "react"
-import { useAuth } from "@/contexts/AuthContext"
-import { fetchUsersByBusinessId } from "@/lib/services"
-import { auth, db } from "@/backend/firebase"
-import { createUserWithEmailAndPassword } from "firebase/auth"
-import { doc, setDoc, updateDoc } from "firebase/firestore"
+} from "react-native";
+import { Stack } from "expo-router";
+import AppHeader from "@/components/AppHeader";
+import type { IUser, UserFormData, FormErrors, IUserBody } from "@/types";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { fetchUsersByBusinessId } from "@/lib/services";
+import { auth, db } from "@/backend/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc, updateDoc } from "firebase/firestore";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 export default function UsersScreen() {
-  const { user } = useAuth()
-  const [users, setUsers] = useState<IUserBody[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
+  const { user } = useAuth();
+  const [users, setUsers] = useState<IUserBody[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const loadUsers = async () => {
-      setIsLoading(true)
-      const businessId = user?.businessId
+      setIsLoading(true);
+      const businessId = user?.businessId;
       if (!businessId) {
-        setIsLoading(false)
-        return
+        setIsLoading(false);
+        return;
       }
 
       try {
-        const users = await fetchUsersByBusinessId(businessId)
-        console.log("Users:", users)
-        setUsers(users)
+        const users = await fetchUsersByBusinessId(businessId);
+        console.log("Users:", users);
+        setUsers(users);
       } catch (error) {
-        Alert.alert("Error", String(error) || "Failed to fetch users.")
+        Alert.alert("Error", String(error) || "Failed to fetch users.");
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    loadUsers()
-  }, [user?.businessId])
+    loadUsers();
+  }, [user?.businessId]);
 
-  const [isDrawerVisible, setIsDrawerVisible] = useState(false)
-  const [editingUser, setEditingUser] = useState<IUser | null>(null)
+  const [isDrawerVisible, setIsDrawerVisible] = useState(false);
+  const [editingUser, setEditingUser] = useState<IUser | null>(null);
   const [formData, setFormData] = useState<UserFormData>({
     firstName: "",
     lastName: "",
@@ -64,8 +65,21 @@ export default function UsersScreen() {
     phone_number: "",
     expectedArrivalTime: "",
     isAdmin: false,
-  })
-  const [errors, setErrors] = useState<FormErrors>({})
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [isTimePickerVisible, setTimePickerVisible] = useState(false);
+  const showTimePicker = () => setTimePickerVisible(true);
+  const hideTimePicker = () => setTimePickerVisible(false);
+  const [selectedTime, setSelectedTime] = useState<Date | null>(null);
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const handleTimeConfirm = (time: Date) => {
+    setSelectedTime(time);
+    setFormData((prev) => ({ ...prev, expectedArrivalTime: formatTime(time) }));
+    hideTimePicker();
+  };
 
   const resetForm = () => {
     setFormData({
@@ -76,15 +90,15 @@ export default function UsersScreen() {
       phone_number: "",
       expectedArrivalTime: "",
       isAdmin: false,
-    })
-    setErrors({})
-    setEditingUser(null)
-  }
+    });
+    setErrors({});
+    setEditingUser(null);
+  };
 
   const openAddUserDrawer = () => {
-    resetForm()
-    setIsDrawerVisible(true)
-  }
+    resetForm();
+    setIsDrawerVisible(true);
+  };
 
   const openEditUserDrawer = (user: IUserBody) => {
     setFormData({
@@ -95,67 +109,70 @@ export default function UsersScreen() {
       phone_number: user.phone_number,
       expectedArrivalTime: user.expectedArrivalTime || "",
       isAdmin: user.isAdmin,
-    })
-    setEditingUser(user)
-    setIsDrawerVisible(true)
-  }
+    });
+    setEditingUser(user);
+    setIsDrawerVisible(true);
+  };
 
   const closeDrawer = () => {
-    setIsDrawerVisible(false)
-    resetForm()
-  }
+    setIsDrawerVisible(false);
+    resetForm();
+  };
 
-  const updateFormField = (field: keyof UserFormData, value: string | boolean) => {
+  const updateFormField = (
+    field: keyof UserFormData,
+    value: string | boolean
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
+    }));
 
     // Clear error when typing
     if (errors[field as keyof FormErrors]) {
       setErrors((prev) => ({
         ...prev,
         [field]: "",
-      }))
+      }));
     }
-  }
+  };
 
   const validateForm = (): boolean => {
-    let valid = true
-    const newErrors: FormErrors = {}
+    let valid = true;
+    const newErrors: FormErrors = {};
 
     // First name validation
     if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required"
-      valid = false
+      newErrors.firstName = "First name is required";
+      valid = false;
     }
 
     // Last name validation
     if (!formData.lastName.trim()) {
-      newErrors.lastName = "Last name is required"
-      valid = false
+      newErrors.lastName = "Last name is required";
+      valid = false;
     }
 
     // Email validation
     if (!formData.email.trim()) {
-      newErrors.email = "Email is required"
-      valid = false
+      newErrors.email = "Email is required";
+      valid = false;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid"
-      valid = false
+      newErrors.email = "Email is invalid";
+      valid = false;
     }
 
-    setErrors(newErrors)
-    return valid
-  }
+    setErrors(newErrors);
+    return valid;
+  };
 
   const handleSaveUser = async () => {
     if (!validateForm() || !user) {
-      return
+      return;
     }
 
-    setIsSaving(true)
-    const { businessId, business } = user
+    setIsSaving(true);
+    const { businessId, business } = user;
 
     try {
       if (editingUser) {
@@ -173,24 +190,33 @@ export default function UsersScreen() {
           businessId: businessId,
           business: business,
           status: "active",
-        }
+        };
 
-        setUsers((prev) => prev.map((user) => (user.uid === editingUser.uid ? userData : user)))
+        setUsers((prev) =>
+          prev.map((user) => (user.uid === editingUser.uid ? userData : user))
+        );
 
-        await updateDoc(doc(db, "businesses", businessId, "users", editingUser.uid), {
-          firstName: formData.firstName.trim(),
-          lastName: formData.lastName.trim(),
-          email: formData.email.trim(),
-          phone_number: formData.phone_number.trim(),
-          isAdmin: formData.isAdmin,
-          expectedArrivalTime: formData.expectedArrivalTime?.trim() || null,
-          title: formData.title?.trim() || null,
-        })
-        Alert.alert("Success", "User updated successfully!")
+        await updateDoc(
+          doc(db, "businesses", businessId, "users", editingUser.uid),
+          {
+            firstName: formData.firstName.trim(),
+            lastName: formData.lastName.trim(),
+            email: formData.email.trim(),
+            phone_number: formData.phone_number.trim(),
+            isAdmin: formData.isAdmin,
+            expectedArrivalTime: formData.expectedArrivalTime?.trim() || null,
+            title: formData.title?.trim() || null,
+          }
+        );
+        Alert.alert("Success", "User updated successfully!");
       } else {
         // Add new user
-        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, "123456#")
-        const uid = userCredential.user.uid
+        const userCredential = await createUserWithEmailAndPassword(
+          auth,
+          formData.email,
+          "123456#"
+        );
+        const uid = userCredential.user.uid;
 
         const userData: IUserBody = {
           uid,
@@ -205,34 +231,39 @@ export default function UsersScreen() {
           businessId: businessId,
           business: business,
           status: "active",
-        }
-        setUsers((prev) => [userData, ...prev])
+        };
+        setUsers((prev) => [userData, ...prev]);
 
         await setDoc(doc(db, "businesses", businessId, "users", uid), {
           uid,
           ...formData,
           status: "active",
           createdAt: new Date(),
-        })
-        Alert.alert("Success", "User added successfully!")
+        });
+        Alert.alert("Success", "User added successfully!");
       }
 
-      closeDrawer()
+      closeDrawer();
     } catch (error) {
-      console.error("Error saving user:", error)
-      Alert.alert("Error", "Failed to save user. Please try again.")
+      console.error("Error saving user:", error);
+      Alert.alert("Error", "Failed to save user. Please try again.");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   const toggleUserStatus = (userId: string, currentStatus: string) => {
     setUsers((prev) =>
       prev.map((user) =>
-        user.uid === userId ? { ...user, status: currentStatus === "active" ? "inactive" : "active" } : user,
-      ),
-    )
-  }
+        user.uid === userId
+          ? {
+              ...user,
+              status: currentStatus === "active" ? "inactive" : "active",
+            }
+          : user
+      )
+    );
+  };
 
   return (
     <>
@@ -245,7 +276,10 @@ export default function UsersScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>User Management</Text>
-          <TouchableOpacity style={styles.addButton} onPress={openAddUserDrawer}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={openAddUserDrawer}
+          >
             <Text style={styles.addButtonText}>+ Add User</Text>
           </TouchableOpacity>
         </View>
@@ -258,8 +292,13 @@ export default function UsersScreen() {
         ) : users.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyTitle}>No Users Yet</Text>
-            <Text style={styles.emptySubtitle}>Get started by adding your first team member</Text>
-            <TouchableOpacity style={styles.emptyButton} onPress={openAddUserDrawer}>
+            <Text style={styles.emptySubtitle}>
+              Get started by adding your first team member
+            </Text>
+            <TouchableOpacity
+              style={styles.emptyButton}
+              onPress={openAddUserDrawer}
+            >
               <Text style={styles.emptyButtonText}>+ Add First User</Text>
             </TouchableOpacity>
           </View>
@@ -273,25 +312,45 @@ export default function UsersScreen() {
                   </Text>
                   <Text style={styles.userEmail}>{user.email}</Text>
                   <Text style={styles.userRole}>
-                    {user.isAdmin ? "Admin" : "Employee"} {user.title && `• ${user.title}`}
+                    {user.isAdmin ? "Admin" : "Employee"}{" "}
+                    {user.title && `• ${user.title}`}
                   </Text>
-                  {user.phone_number && <Text style={styles.userPhone}>{user.phone_number}</Text>}
+                  {user.phone_number && (
+                    <Text style={styles.userPhone}>{user.phone_number}</Text>
+                  )}
                   {user.expectedArrivalTime && (
-                    <Text style={styles.userArrival}>Expected: {user.expectedArrivalTime}</Text>
+                    <Text style={styles.userArrival}>
+                      Expected: {user.expectedArrivalTime}
+                    </Text>
                   )}
                 </View>
                 <View style={styles.userActions}>
                   <TouchableOpacity
-                    style={[styles.statusBadge, user.status === "active" ? styles.activeBadge : styles.inactiveBadge]}
-                    onPress={() => toggleUserStatus(user.uid, user?.status || "inactive")}
+                    style={[
+                      styles.statusBadge,
+                      user.status === "active"
+                        ? styles.activeBadge
+                        : styles.inactiveBadge,
+                    ]}
+                    onPress={() =>
+                      toggleUserStatus(user.uid, user?.status || "inactive")
+                    }
                   >
                     <Text
-                      style={[styles.statusText, user.status === "active" ? styles.activeText : styles.inactiveText]}
+                      style={[
+                        styles.statusText,
+                        user.status === "active"
+                          ? styles.activeText
+                          : styles.inactiveText,
+                      ]}
                     >
                       {user.status}
                     </Text>
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.editButton} onPress={() => openEditUserDrawer(user)}>
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => openEditUserDrawer(user)}
+                  >
                     <Text style={styles.editButtonText}>Edit</Text>
                   </TouchableOpacity>
                 </View>
@@ -301,14 +360,23 @@ export default function UsersScreen() {
         )}
 
         {/* User Form Drawer */}
-        <Modal visible={isDrawerVisible} animationType="slide" presentationStyle="pageSheet">
+        <Modal
+          visible={isDrawerVisible}
+          animationType="slide"
+          presentationStyle="pageSheet"
+        >
           <SafeAreaView style={styles.drawerContainer}>
-            <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.drawerContent}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={styles.drawerContent}
+            >
               <View style={styles.drawerHeader}>
                 <TouchableOpacity onPress={closeDrawer}>
                   <Text style={styles.cancelButton}>Cancel</Text>
                 </TouchableOpacity>
-                <Text style={styles.drawerTitle}>{editingUser ? "Edit User" : "Add User"}</Text>
+                <Text style={styles.drawerTitle}>
+                  {editingUser ? "Edit User" : "Add User"}
+                </Text>
                 <TouchableOpacity onPress={handleSaveUser} disabled={isSaving}>
                   {isSaving ? (
                     <ActivityIndicator size="small" color="#000000" />
@@ -331,7 +399,9 @@ export default function UsersScreen() {
                     onChangeText={(text) => updateFormField("firstName", text)}
                     autoCapitalize="words"
                   />
-                  {errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
+                  {errors.firstName && (
+                    <Text style={styles.errorText}>{errors.firstName}</Text>
+                  )}
                 </View>
 
                 {/* Last Name */}
@@ -346,7 +416,9 @@ export default function UsersScreen() {
                     onChangeText={(text) => updateFormField("lastName", text)}
                     autoCapitalize="words"
                   />
-                  {errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
+                  {errors.lastName && (
+                    <Text style={styles.errorText}>{errors.lastName}</Text>
+                  )}
                 </View>
 
                 {/* Title */}
@@ -374,7 +446,9 @@ export default function UsersScreen() {
                     keyboardType="email-address"
                     autoCapitalize="none"
                   />
-                  {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+                  {errors.email && (
+                    <Text style={styles.errorText}>{errors.email}</Text>
+                  )}
                 </View>
 
                 {/* Phone Number */}
@@ -384,7 +458,9 @@ export default function UsersScreen() {
                     style={styles.input}
                     placeholder="Enter phone number (optional)"
                     value={formData.phone_number}
-                    onChangeText={(text) => updateFormField("phone_number", text)}
+                    onChangeText={(text) =>
+                      updateFormField("phone_number", text)
+                    }
                     keyboardType="phone-pad"
                   />
                 </View>
@@ -392,12 +468,16 @@ export default function UsersScreen() {
                 {/* Expected Arrival Time */}
                 <View style={styles.inputContainer}>
                   <Text style={styles.label}>Expected Arrival Time</Text>
-                  <TextInput
+                  <TouchableOpacity
                     style={styles.input}
-                    placeholder="e.g., 09:00 (optional)"
-                    value={formData.expectedArrivalTime}
-                    onChangeText={(text) => updateFormField("expectedArrivalTime", text)}
-                  />
+                    onPress={showTimePicker}
+                  >
+                    <Text>
+                      {selectedTime
+                        ? formatTime(selectedTime)
+                        : "e.g., 09:00 (optional)"}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
 
                 {/* Admin Toggle */}
@@ -414,9 +494,17 @@ export default function UsersScreen() {
             </KeyboardAvoidingView>
           </SafeAreaView>
         </Modal>
+        {/* Time Picker */}
+        <DateTimePickerModal
+          isVisible={isTimePickerVisible}
+          mode="time"
+          onConfirm={handleTimeConfirm}
+          onCancel={hideTimePicker}
+          date={selectedTime ?? new Date()}
+        />
       </SafeAreaView>
     </>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
@@ -637,4 +725,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-})
+});

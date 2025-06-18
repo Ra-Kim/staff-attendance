@@ -221,7 +221,7 @@ export default function SignUpScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "Signup" }} />
+      <Stack.Screen options={{ title: "Signup", headerBackVisible: false }} />
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
