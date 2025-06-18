@@ -14,11 +14,12 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { auth, db } from "@/backend/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/contexts/AuthContext";
+import dayjs from "dayjs";
 
 interface FormDetails {
   businessName: string;
@@ -198,6 +199,17 @@ export default function SignUpScreen() {
         phone_number: formDetails.phoneNumber,
         isAdmin: true,
         createdAt: new Date(),
+        business: {
+          businessId,
+          business_name: formDetails.businessName,
+          email: formDetails.email,
+          phone_number: formDetails.phoneNumber,
+          address: formDetails.address,
+          business_type: formDetails.businessType,
+          adminId: uid,
+          createdAt: String(dayjs().toDate()),
+        },
+        businessId,
       });
       Alert.alert("Success", "Account created successfully!");
     } catch (error: any) {
@@ -208,212 +220,215 @@ export default function SignUpScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.keyboardAvoidView}
-      >
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <View style={styles.logo}>
-                <Text style={styles.logoText}>TD</Text>
+    <>
+      <Stack.Screen options={{ title: "Signup" }} />
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.keyboardAvoidView}
+        >
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            <View style={styles.header}>
+              <View style={styles.logoContainer}>
+                <View style={styles.logo}>
+                  <Text style={styles.logoText}>TD</Text>
+                </View>
+                <Text style={styles.appName}>TheDot</Text>
               </View>
-              <Text style={styles.appName}>TheDot</Text>
-            </View>
-            <Text style={styles.headerTitle}>Create Business Account</Text>
-            <Text style={styles.headerSubtitle}>
-              Join our platform and grow your business
-            </Text>
-          </View>
-
-          <View style={styles.formContainer}>
-            {/* Business Information */}
-            <Text style={styles.sectionTitle}>Business Information</Text>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Business Name"
-                value={formDetails.businessName}
-                onChangeText={(text) => updateFormField("businessName", text)}
-                autoCapitalize="words"
-              />
-            </View>
-            {errors.businessName && (
-              <Text style={styles.errorText}>{errors.businessName}</Text>
-            )}
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Business Address"
-                value={formDetails.address}
-                onChangeText={(text) => updateFormField("address", text)}
-                multiline
-                numberOfLines={2}
-              />
-            </View>
-            {errors.address && (
-              <Text style={styles.errorText}>{errors.address}</Text>
-            )}
-
-            {/* Business Type Dropdown */}
-            <TouchableOpacity
-              style={styles.inputContainer}
-              onPress={() =>
-                setShowBusinessTypeDropdown(!showBusinessTypeDropdown)
-              }
-            >
-              <Text
-                style={[
-                  styles.input,
-                  !formDetails.businessType && styles.placeholderText,
-                ]}
-              >
-                {formDetails.businessType || "Select Business Type"}
+              <Text style={styles.headerTitle}>Create Business Account</Text>
+              <Text style={styles.headerSubtitle}>
+                Join our platform and grow your business
               </Text>
-              <Text style={styles.dropdownArrow}>
-                {showBusinessTypeDropdown ? "▲" : "▼"}
-              </Text>
-            </TouchableOpacity>
+            </View>
 
-            {showBusinessTypeDropdown && (
-              <View style={styles.dropdownContainer}>
-                {businessTypes.map((type, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.dropdownItem}
-                    onPress={() => {
-                      updateFormField("businessType", type);
-                      setShowBusinessTypeDropdown(false);
-                    }}
-                  >
-                    <Text style={styles.dropdownItemText}>{type}</Text>
-                  </TouchableOpacity>
-                ))}
+            <View style={styles.formContainer}>
+              {/* Business Information */}
+              <Text style={styles.sectionTitle}>Business Information</Text>
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Business Name"
+                  value={formDetails.businessName}
+                  onChangeText={(text) => updateFormField("businessName", text)}
+                  autoCapitalize="words"
+                />
               </View>
-            )}
-
-            {errors.businessType && (
-              <Text style={styles.errorText}>{errors.businessType}</Text>
-            )}
-
-            {/* Contact Information */}
-            <Text style={styles.sectionTitle}>Contact Information</Text>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Email Address"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={formDetails.email}
-                onChangeText={(text) => updateFormField("email", text)}
-              />
-            </View>
-            {errors.email && (
-              <Text style={styles.errorText}>{errors.email}</Text>
-            )}
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Phone Number"
-                keyboardType="phone-pad"
-                value={formDetails.phoneNumber}
-                onChangeText={(text) => updateFormField("phoneNumber", text)}
-              />
-            </View>
-            {errors.phoneNumber && (
-              <Text style={styles.errorText}>{errors.phoneNumber}</Text>
-            )}
-
-            {/* Security */}
-            <Text style={styles.sectionTitle}>Security</Text>
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Password"
-                secureTextEntry={secureTextEntry}
-                value={formDetails.password}
-                onChangeText={(text) => updateFormField("password", text)}
-              />
-              <TouchableOpacity
-                onPress={() => setSecureTextEntry(!secureTextEntry)}
-                style={styles.eyeIcon}
-              >
-                <Text style={styles.eyeText}>
-                  {secureTextEntry ? "👁️" : "🙈"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {errors.password && (
-              <Text style={styles.errorText}>{errors.password}</Text>
-            )}
-
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm Password"
-                secureTextEntry={secureConfirmTextEntry}
-                value={formDetails.confirmPassword}
-                onChangeText={(text) =>
-                  updateFormField("confirmPassword", text)
-                }
-              />
-              <TouchableOpacity
-                onPress={() =>
-                  setSecureConfirmTextEntry(!secureConfirmTextEntry)
-                }
-                style={styles.eyeIcon}
-              >
-                <Text style={styles.eyeText}>
-                  {secureConfirmTextEntry ? "👁️" : "🙈"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-            {errors.confirmPassword && (
-              <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-            )}
-
-            {/* Terms and Privacy Policy */}
-            <View style={styles.termsContainer}>
-              <Text style={styles.termsText}>
-                By registering, you agree to our{" "}
-                <Text style={styles.termsLink}>Terms of Service</Text> and{" "}
-                <Text style={styles.termsLink}>Privacy Policy</Text>
-              </Text>
-            </View>
-
-            {/* Register Button */}
-            <TouchableOpacity
-              style={styles.registerButton}
-              onPress={handleRegister}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
-              ) : (
-                <Text style={styles.registerButtonText}>Create Account</Text>
+              {errors.businessName && (
+                <Text style={styles.errorText}>{errors.businessName}</Text>
               )}
-            </TouchableOpacity>
 
-            {/* Already have account link */}
-            <TouchableOpacity
-              style={styles.loginLink}
-              onPress={() => router.push("/landing")}
-            >
-              <Text style={styles.loginLinkText}>
-                Already have an account?{" "}
-                <Text style={styles.loginLinkTextBold}>Sign In</Text>
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Business Address"
+                  value={formDetails.address}
+                  onChangeText={(text) => updateFormField("address", text)}
+                  multiline
+                  numberOfLines={2}
+                />
+              </View>
+              {errors.address && (
+                <Text style={styles.errorText}>{errors.address}</Text>
+              )}
+
+              {/* Business Type Dropdown */}
+              <TouchableOpacity
+                style={styles.inputContainer}
+                onPress={() =>
+                  setShowBusinessTypeDropdown(!showBusinessTypeDropdown)
+                }
+              >
+                <Text
+                  style={[
+                    styles.input,
+                    !formDetails.businessType && styles.placeholderText,
+                  ]}
+                >
+                  {formDetails.businessType || "Select Business Type"}
+                </Text>
+                <Text style={styles.dropdownArrow}>
+                  {showBusinessTypeDropdown ? "▲" : "▼"}
+                </Text>
+              </TouchableOpacity>
+
+              {showBusinessTypeDropdown && (
+                <View style={styles.dropdownContainer}>
+                  {businessTypes.map((type, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={styles.dropdownItem}
+                      onPress={() => {
+                        updateFormField("businessType", type);
+                        setShowBusinessTypeDropdown(false);
+                      }}
+                    >
+                      <Text style={styles.dropdownItemText}>{type}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              {errors.businessType && (
+                <Text style={styles.errorText}>{errors.businessType}</Text>
+              )}
+
+              {/* Contact Information */}
+              <Text style={styles.sectionTitle}>Contact Information</Text>
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Email Address"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={formDetails.email}
+                  onChangeText={(text) => updateFormField("email", text)}
+                />
+              </View>
+              {errors.email && (
+                <Text style={styles.errorText}>{errors.email}</Text>
+              )}
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Phone Number"
+                  keyboardType="phone-pad"
+                  value={formDetails.phoneNumber}
+                  onChangeText={(text) => updateFormField("phoneNumber", text)}
+                />
+              </View>
+              {errors.phoneNumber && (
+                <Text style={styles.errorText}>{errors.phoneNumber}</Text>
+              )}
+
+              {/* Security */}
+              <Text style={styles.sectionTitle}>Security</Text>
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Password"
+                  secureTextEntry={secureTextEntry}
+                  value={formDetails.password}
+                  onChangeText={(text) => updateFormField("password", text)}
+                />
+                <TouchableOpacity
+                  onPress={() => setSecureTextEntry(!secureTextEntry)}
+                  style={styles.eyeIcon}
+                >
+                  <Text style={styles.eyeText}>
+                    {secureTextEntry ? "👁️" : "🙈"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {errors.password && (
+                <Text style={styles.errorText}>{errors.password}</Text>
+              )}
+
+              <View style={styles.inputContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Confirm Password"
+                  secureTextEntry={secureConfirmTextEntry}
+                  value={formDetails.confirmPassword}
+                  onChangeText={(text) =>
+                    updateFormField("confirmPassword", text)
+                  }
+                />
+                <TouchableOpacity
+                  onPress={() =>
+                    setSecureConfirmTextEntry(!secureConfirmTextEntry)
+                  }
+                  style={styles.eyeIcon}
+                >
+                  <Text style={styles.eyeText}>
+                    {secureConfirmTextEntry ? "👁️" : "🙈"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {errors.confirmPassword && (
+                <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+              )}
+
+              {/* Terms and Privacy Policy */}
+              <View style={styles.termsContainer}>
+                <Text style={styles.termsText}>
+                  By registering, you agree to our{" "}
+                  <Text style={styles.termsLink}>Terms of Service</Text> and{" "}
+                  <Text style={styles.termsLink}>Privacy Policy</Text>
+                </Text>
+              </View>
+
+              {/* Register Button */}
+              <TouchableOpacity
+                style={styles.registerButton}
+                onPress={handleRegister}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.registerButtonText}>Create Account</Text>
+                )}
+              </TouchableOpacity>
+
+              {/* Already have account link */}
+              <TouchableOpacity
+                style={styles.loginLink}
+                onPress={() => router.push("/landing")}
+              >
+                <Text style={styles.loginLinkText}>
+                  Already have an account?{" "}
+                  <Text style={styles.loginLinkTextBold}>Sign In</Text>
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </>
   );
 }
 

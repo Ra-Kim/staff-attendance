@@ -17,7 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { auth, db } from "@/backend/firebase";
-import { router } from "expo-router";
+import { router, Stack } from "expo-router";
 import {
   collectionGroup,
   doc,
@@ -142,78 +142,81 @@ export default function LandingScreen() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
-      >
-        <View style={styles.formContainer}>
-          <Text style={styles.title}>TheDot</Text>
-          <Text style={styles.subtitle}>Sign in to continue</Text>
-          {/* Generic error message */}
-          {authError && (
-            <View style={styles.errorContainer}>
-              <Icon name="alert-circle" size={20} color="#b21f1f" />
-              <Text style={styles.authErrorText}>{authError}</Text>
-            </View>
-          )}
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              placeholderTextColor="#666"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={formData.email}
-              onChangeText={(text) => handleChange("email", text)}
-            />
-            {errors.email ? (
-              <Text style={styles.errorText}>{errors.email}</Text>
-            ) : null}
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              placeholderTextColor="#666"
-              secureTextEntry
-              value={formData.password}
-              onChangeText={(text) => handleChange("password", text)}
-            />
-            {errors.password ? (
-              <Text style={styles.errorText}>{errors.password}</Text>
-            ) : null}
-          </View>
-
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Login</Text>
+    <>
+      <Stack.Screen options={{ title: "Login" }} />
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.container}
+        >
+          <View style={styles.formContainer}>
+            <Text style={styles.title}>TheDot</Text>
+            <Text style={styles.subtitle}>Sign in to continue</Text>
+            {/* Generic error message */}
+            {authError && (
+              <View style={styles.errorContainer}>
+                <Icon name="alert-circle" size={20} color="#b21f1f" />
+                <Text style={styles.authErrorText}>{authError}</Text>
+              </View>
             )}
-          </TouchableOpacity>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                placeholderTextColor="#666"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={formData.email}
+                onChangeText={(text) => handleChange("email", text)}
+              />
+              {errors.email ? (
+                <Text style={styles.errorText}>{errors.email}</Text>
+              ) : null}
+            </View>
 
-          <View style={styles.signupContainer}>
-            <Text style={styles.signupText}>{`Don't have an account?`} </Text>
-            <TouchableOpacity>
-              <Text
-                style={styles.signupLink}
-                onPress={() => router.replace("/signup")}
-              >
-                Sign Up
-              </Text>
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                placeholderTextColor="#666"
+                secureTextEntry
+                value={formData.password}
+                onChangeText={(text) => handleChange("password", text)}
+              />
+              {errors.password ? (
+                <Text style={styles.errorText}>{errors.password}</Text>
+              ) : null}
+            </View>
+
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity style={styles.loginButton} onPress={handleSubmit}>
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Login</Text>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.signupContainer}>
+              <Text style={styles.signupText}>{`Don't have an account?`} </Text>
+              <TouchableOpacity>
+                <Text
+                  style={styles.signupLink}
+                  onPress={() => router.replace("/signup")}
+                >
+                  Sign Up
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </KeyboardAvoidingView>
-    </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
+    </>
   );
 }
 

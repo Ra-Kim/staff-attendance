@@ -10,6 +10,7 @@ import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
+import AppHeader from "@/components/AppHeader";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -20,7 +21,8 @@ export default function TabLayout() {
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
-          headerShown: false,
+          // headerShown: false,
+          header: ({ route }) => <AppHeader />,
           tabBarButton: HapticTab,
           tabBarBackground: TabBarBackground,
           tabBarStyle: Platform.select({

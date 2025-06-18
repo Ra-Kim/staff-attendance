@@ -39,10 +39,11 @@ function LayoutRouter() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <StatusBar style="auto" />
-      <Stack>
+      <Stack screenOptions={{ headerShown: !isAuthenticated }}>
         {isAuthenticated ? (
           <>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="business" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
           </>
         ) : (

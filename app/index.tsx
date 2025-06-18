@@ -1,32 +1,37 @@
-"use client"
+"use client";
 
-import { useAuth } from "@/contexts/AuthContext"
-import { View, Text, ActivityIndicator, StyleSheet } from "react-native"
-import { useEffect } from "react"
-import { useRouter } from "expo-router"
+import { useAuth } from "@/contexts/AuthContext";
+import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
+import { useEffect } from "react";
+import { Stack, useRouter } from "expo-router";
 
 export default function IndexScreen() {
-  const { isAuthenticated } = useAuth()
-  const router = useRouter()
+  const { isAuthenticated } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     // Set a timeout to navigate to landing screen after 3 seconds
     const timer = setTimeout(() => {
-      router.replace("/landing")
-    }, 3000)
+      router.replace("/landing");
+    }, 3000);
 
     // Clear the timeout if the component unmounts
-    return () => clearTimeout(timer)
-  }, [router])
+    return () => clearTimeout(timer);
+  }, [router]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.appName}>TheDot</Text>
-      <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
-      <Text style={styles.loadingText}>Loading...</Text>
-      <Text style={styles.debugText}>Auth State: {isAuthenticated ? "Authenticated" : "Not Authenticated"}</Text>
-    </View>
-  )
+    <>
+      <Stack.Screen options={{ title: "Welcome" }} />
+      <View style={styles.container}>
+        <Text style={styles.appName}>TheDot</Text>
+        <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
+        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.debugText}>
+          Auth State: {isAuthenticated ? "Authenticated" : "Not Authenticated"}
+        </Text>
+      </View>
+    </>
+  );
 }
 
 const styles = StyleSheet.create({
@@ -54,4 +59,4 @@ const styles = StyleSheet.create({
     color: "#666",
     fontFamily: "SpaceMono",
   },
-})
+});
