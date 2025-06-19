@@ -38,30 +38,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<IUser | null>(null);
   const router = useRouter();
 
-  // Load from AsyncStorage on initial mount
-  useEffect(() => {
-    const loadAuthState = async () => {
-      try {
-        const storedUser = await AsyncStorage.getItem("auth_user");
-        const storedAuth = await AsyncStorage.getItem("is_authenticated");
-
-        if (storedUser && storedAuth === "true") {
-          setUser(JSON.parse(storedUser));
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      } catch (error) {
-        console.error("Error loading auth state:", error);
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadAuthState();
-  }, []);
-
   const login = async (userData: IUser) => {
     setUser(userData);
     setIsAuthenticated(true);
@@ -76,6 +52,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await AsyncStorage.removeItem("auth_user");
     await AsyncStorage.removeItem("is_authenticated");
   };
+
+  // Load from AsyncStorage on initial mount
+  useEffect(() => {
+    const loadAuthState = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem("auth_user");
+        const storedAuth = await AsyncStorage.getItem("is_authenticated");
+
+        if (storedUser && storedAuth === "true") {
+          setUser(JSON.parse(storedUser));
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+          logout()
+        }
+      } catch (error) {
+        console.error("Error loading auth state:", error);
+        setIsAuthenticated(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAuthState();
+  }, []);
+
+  
 
   const toggleAuth = () => {
     const newState = !isAuthenticated;

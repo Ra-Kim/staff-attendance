@@ -20,6 +20,7 @@ import { auth, db } from "@/backend/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/contexts/AuthContext";
 import dayjs from "dayjs";
+import { businessTypes } from "@/lib/constants";
 
 interface FormDetails {
   businessName: string;
@@ -60,17 +61,6 @@ export default function SignUpScreen() {
   const [secureConfirmTextEntry, setSecureConfirmTextEntry] = useState(true);
   const [showBusinessTypeDropdown, setShowBusinessTypeDropdown] =
     useState(false);
-
-  const businessTypes = [
-    "Restaurant",
-    "Retail Store",
-    "Service Provider",
-    "Technology",
-    "Healthcare",
-    "Education",
-    "Manufacturing",
-    "Other",
-  ];
 
   // Update form field
   const updateFormField = (field: string, value: string) => {
@@ -181,7 +171,7 @@ export default function SignUpScreen() {
         address: formDetails.address,
         business_type: formDetails.businessType,
         adminId: uid,
-        createdAt: new Date(),
+        createdAt: dayjs().toDate().toISOString(),
       });
 
       // ✅ 3. Create a user doc linked to the business
@@ -190,7 +180,7 @@ export default function SignUpScreen() {
         email: formDetails.email,
         phone_number: formDetails.phoneNumber,
         isAdmin: true,
-        createdAt: new Date(),
+        createdAt: dayjs().toDate().toISOString(),
       });
 
       login({
@@ -198,7 +188,7 @@ export default function SignUpScreen() {
         email: formDetails.email,
         phone_number: formDetails.phoneNumber,
         isAdmin: true,
-        createdAt: new Date(),
+        createdAt: dayjs().toDate().toISOString(),
         business: {
           businessId,
           business_name: formDetails.businessName,
@@ -206,6 +196,8 @@ export default function SignUpScreen() {
           phone_number: formDetails.phoneNumber,
           address: formDetails.address,
           business_type: formDetails.businessType,
+          bufferEnabled: false, // Default value
+          bufferMinutes: 15, // Default value
           adminId: uid,
           createdAt: String(dayjs().toDate()),
         },

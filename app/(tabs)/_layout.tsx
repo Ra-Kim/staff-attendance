@@ -9,13 +9,11 @@ import TabBarBackground from "@/components/ui/TabBarBackground";
 import { Colors } from "@/constants/Colors";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { useAuth } from "@/contexts/AuthContext";
 import AppHeader from "@/components/AppHeader";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
-  const { user } = useAuth();
- 
+
   return (
     <ProtectedRoute>
       <Tabs
@@ -51,17 +49,15 @@ export default function TabLayout() {
             ),
           }}
         />
-        {user?.isAdmin && (
-          <Tabs.Screen
-            name="business"
-            options={{
-              title: "Business",
-              tabBarIcon: ({ color }) => (
-                <IconSymbol size={28} name="building.2.fill" color={color} />
-              ),
-            }}
-          />
-        )}
+        <Tabs.Screen
+          name="business"
+          options={{
+            title: "Business",
+            tabBarIcon: ({ color }) => (
+              <IconSymbol size={28} name="building.2.fill" color={color} />
+            ),
+          }}
+        />
         <Tabs.Screen
           name="profile"
           options={{

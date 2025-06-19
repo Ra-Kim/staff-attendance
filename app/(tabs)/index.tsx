@@ -426,12 +426,14 @@ export default function HomeScreen() {
             Show this QR code to mark your attendance
           </Text>
           <View style={styles.qrContainer} ref={userQrCodeRef}>
-            <QRCode
-              value={userQRCode}
-              size={200}
-              color="#000000"
-              backgroundColor="#FFFFFF"
-            />
+            {userQRCode && (
+              <QRCode
+                value={userQRCode}
+                size={200}
+                color="#000000"
+                backgroundColor="#FFFFFF"
+              />
+            )}
             <Text style={styles.qrInfo}>Your unique attendance code</Text>
             {/* Download Button for User QR */}
             <TouchableOpacity

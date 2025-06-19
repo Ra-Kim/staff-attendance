@@ -24,6 +24,28 @@ export default function BusinessScreen() {
   const router = useRouter();
   const { user } = useAuth();
 
+  if (user?.isAdmin !== true) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.accessDeniedContainer}>
+          <View style={styles.accessDeniedContent}>
+            <Text style={styles.accessDeniedIcon}>🔒</Text>
+            <Text style={styles.accessDeniedTitle}>Admin Access Required</Text>
+            <Text style={styles.accessDeniedMessage}>
+              This section is only available for administrators. Please contact
+              your admin if you need access to business management features.
+            </Text>
+            <View style={styles.accessDeniedInfo}>
+              <Text style={styles.accessDeniedInfoText}>
+                Current Role: {user?.isAdmin ? "Admin" : "User"}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const businessMenuItems: BusinessMenuItem[] = [
     {
       id: "users",
@@ -259,5 +281,58 @@ const styles = StyleSheet.create({
   subItemsContainer: {
     paddingTop: 10,
     paddingBottom: 10,
+  },
+  accessDeniedContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+    backgroundColor: "#F8F8F8",
+  },
+  accessDeniedContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 15,
+    padding: 30,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+    maxWidth: 350,
+  },
+  accessDeniedIcon: {
+    fontSize: 48,
+    marginBottom: 20,
+  },
+  accessDeniedTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  accessDeniedMessage: {
+    fontSize: 16,
+    color: "#666666",
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 20,
+  },
+  accessDeniedInfo: {
+    backgroundColor: "#F0F0F0",
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  accessDeniedInfoText: {
+    fontSize: 14,
+    color: "#333333",
+    fontWeight: "500",
   },
 });

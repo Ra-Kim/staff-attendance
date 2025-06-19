@@ -26,7 +26,7 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { IBusiness, IUser } from "@/types";
+import { IBusiness, IUserBody } from "@/types";
 
 export default function LandingScreen() {
   const { login } = useAuth();
@@ -105,7 +105,7 @@ export default function LandingScreen() {
 
         // ✅ Assuming user belongs to exactly one business
         const userDocSnap = querySnapshot.docs[0];
-        const userData = userDocSnap.data() as IUser;
+        const userData = userDocSnap.data();
 
         // ✅ Extract businessId from the user doc path
         // Path format: businesses/{businessId}/users/{uid}
@@ -123,12 +123,23 @@ export default function LandingScreen() {
         // ✅ Pass userData and businessData to context
 
         // ✅ Pass to context
+        const bus: IBusiness = {
+          ...(businessData as IBusiness),
+          createdAt:
+            typeof businessData?.createdAt === "string"
+              ? businessData?.createdAt
+              : businessData?.createdAt?.toDate()?.toISOString(),
+        };
         setLoading(false);
         login({
-          ...userData,
+          ...(userData as IUserBody),
+          createdAt:
+            typeof userData.createdAt === "string"
+              ? userData.createdAt
+              : userData.createdAt.toDate().toISOString(),
           uid,
           businessId,
-          business: businessData as IBusiness,
+          business: bus as IBusiness,
         });
       } catch (error) {
         console.log(error);

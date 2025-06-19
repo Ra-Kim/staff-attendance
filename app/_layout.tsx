@@ -16,7 +16,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Provider } from "react-native-paper";
 
 function LayoutRouter() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, logout, user } = useAuth();
 
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
@@ -28,11 +28,12 @@ function LayoutRouter() {
     if (isLoading) return; // ✅ prevent redirect if loading
     const isAuth = !!auth.currentUser;
     if (isAuthenticated && isAuth) {
-      router.replace("/(tabs)");
+      router.replace("/(tabs)/profile");
     } else {
+      logout();
       router.replace("/");
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, logout]);
 
   if (!loaded || isLoading) return null;
 
@@ -43,6 +44,12 @@ function LayoutRouter() {
         {isAuthenticated ? (
           <>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            {user?.isAdmin && (
+              <Stack.Screen
+                name="(admin-tabs)"
+                options={{ headerShown: false }}
+              />
+            )}
             <Stack.Screen name="business" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
           </>
