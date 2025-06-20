@@ -304,56 +304,58 @@ export default function UsersScreen() {
           </View>
         ) : (
           <ScrollView style={styles.content}>
-            {users.map((user) => (
-              <View key={user.uid} style={styles.userCard}>
+            {users.map((_user) => (
+              <View key={_user.uid} style={styles.userCard}>
                 <View style={styles.userInfo}>
                   <Text style={styles.userName}>
-                    {user.firstName} {user.lastName}
+                    {_user.firstName} {_user.lastName}
                   </Text>
-                  <Text style={styles.userEmail}>{user.email}</Text>
+                  <Text style={styles.userEmail}>{_user.email}</Text>
                   <Text style={styles.userRole}>
-                    {user.isAdmin ? "Admin" : "Employee"}{" "}
-                    {user.title && `• ${user.title}`}
+                    {_user.isAdmin ? "Admin" : "Employee"}{" "}
+                    {_user.title && `• ${_user.title}`}
                   </Text>
-                  {user.phone_number && (
-                    <Text style={styles.userPhone}>{user.phone_number}</Text>
+                  {_user.phone_number && (
+                    <Text style={styles.userPhone}>{_user.phone_number}</Text>
                   )}
-                  {user.expectedArrivalTime && (
+                  {_user.expectedArrivalTime && (
                     <Text style={styles.userArrival}>
-                      Expected: {user.expectedArrivalTime}
+                      Expected: {_user.expectedArrivalTime}
                     </Text>
                   )}
                 </View>
-                <View style={styles.userActions}>
-                  <TouchableOpacity
-                    style={[
-                      styles.statusBadge,
-                      user.status === "active"
-                        ? styles.activeBadge
-                        : styles.inactiveBadge,
-                    ]}
-                    onPress={() =>
-                      toggleUserStatus(user.uid, user?.status || "inactive")
-                    }
-                  >
-                    <Text
+                {_user?.uid !== user?.business?.adminId && (
+                  <View style={styles.userActions}>
+                    <TouchableOpacity
                       style={[
-                        styles.statusText,
-                        user.status === "active"
-                          ? styles.activeText
-                          : styles.inactiveText,
+                        styles.statusBadge,
+                        _user.status === "active"
+                          ? styles.activeBadge
+                          : styles.inactiveBadge,
                       ]}
+                      onPress={() =>
+                        toggleUserStatus(_user.uid, _user?.status || "inactive")
+                      }
                     >
-                      {user.status}
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.editButton}
-                    onPress={() => openEditUserDrawer(user)}
-                  >
-                    <Text style={styles.editButtonText}>Edit</Text>
-                  </TouchableOpacity>
-                </View>
+                      <Text
+                        style={[
+                          styles.statusText,
+                          _user.status === "active"
+                            ? styles.activeText
+                            : styles.inactiveText,
+                        ]}
+                      >
+                        {_user.status}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.editButton}
+                      onPress={() => openEditUserDrawer(_user)}
+                    >
+                      <Text style={styles.editButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             ))}
           </ScrollView>

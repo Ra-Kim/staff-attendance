@@ -14,10 +14,12 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import QRCode from "react-native-qrcode-svg";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { doc, setDoc, onSnapshot } from "firebase/firestore";
+import { doc, setDoc, onSnapshot, Timestamp, getDoc } from "firebase/firestore";
 import { db } from "@/backend/firebase";
 import { captureRef } from "react-native-view-shot";
 import * as MediaLibrary from "expo-media-library";
+import QRScanner from "@/components/QRScanner";
+import { IUserBody } from "@/types";
 
 interface QRCodeData {
   id: string;
@@ -38,6 +40,7 @@ export default function HomeScreen() {
   const [selectedTime, setSelectedTime] = useState<Date | null>(null);
   const [showExpiryDrawer, setShowExpiryDrawer] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [scannerVisible, setScannerVisible] = useState(false);
 
   const qrCodeRef = useRef<any>(null);
   const userQrCodeRef = useRef<any>(null);
@@ -142,28 +145,6 @@ export default function HomeScreen() {
     }
   }, [user]);
 
-  // const requestPhotoPermission = async () => {
-  //   if (Platform.OS === "android") {
-  //     try {
-  //       const granted = await PermissionsAndroid.request(
-  //         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-  //         {
-  //           title: "Photo Library Permission",
-  //           message: "App needs access to save QR code to your photos",
-  //           buttonNeutral: "Ask Me Later",
-  //           buttonNegative: "Cancel",
-  //           buttonPositive: "OK",
-  //         }
-  //       );
-  //       return granted === PermissionsAndroid.RESULTS.GRANTED;
-  //     } catch (err) {
-  //       console.warn(err);
-  //       return false;
-  //     }
-  //   }
-  //   return true;
-  // };
-
   const handleDateConfirm = (date: Date) => {
     setSelectedDate(date);
     hideDatePicker();
@@ -231,8 +212,115 @@ export default function HomeScreen() {
   };
 
   const handleScanQR = () => {
-    // This would typically open camera for QR scanning
-    Alert.alert("Scan QR", "QR Scanner would open here");
+    setScannerVisible(true);
+  };
+
+  const handleAdminScanSuccess = async (scannedData: string) => {
+    setScannerVisible(false);
+
+    if (!scannedData.startsWith("USER_")) {
+      Alert.alert("Invalid QR", "Scanned code is not a valid user QR code.");
+      return;
+    }
+
+    const scannedUid = scannedData.replace("USER_", "");
+    const businessId = user?.businessId;
+    const business = user?.business;
+
+    if (!businessId || !business) {
+      Alert.alert("Error", "Admin has no valid business info.");
+      return;
+    }
+
+    try {
+      // Step 1: Look for user inside business users subcollection
+      const userRef = doc(db, "businesses", businessId, "users", scannedUid);
+      const userSnap = await getDoc(userRef);
+
+      if (!userSnap.exists()) {
+        Alert.alert(
+          "User Not Found",
+          "This user is not registered under your business."
+        );
+        return;
+      }
+
+      const scannedUser = userSnap.data() as IUserBody;
+
+      // Step 2: Check if user already marked attendance today
+      const today = new Date();
+      const yyyyMMdd = today.toISOString().split("T")[0]; // e.g., 2025-06-19
+      const attendanceId = `${scannedUid}_${yyyyMMdd}`;
+      const attendanceRef = doc(
+        db,
+        "businesses",
+        businessId,
+        "attendance",
+        attendanceId
+      );
+      const attendanceSnap = await getDoc(attendanceRef);
+
+      if (attendanceSnap.exists()) {
+        Alert.alert(
+          "Already Scanned",
+          "This user has already marked attendance today."
+        );
+        return;
+      }
+
+      // Step 3: Determine expected arrival time
+      const expectedTimeStr =
+        scannedUser.expectedArrivalTime ||
+        business.expectedArrivalTime ||
+        "09:00 AM";
+
+      // Create a Date object with today’s date and parsed time
+      const expectedTime = new Date(today); // today's date
+      const [timePart, period] = expectedTimeStr.split(" "); // "7:00", "AM"
+      const [hours, minutes] = timePart.split(":").map(Number);
+
+      let parsedHour = hours;
+      if (period === "PM" && hours !== 12) parsedHour += 12;
+      if (period === "AM" && hours === 12) parsedHour = 0;
+
+      expectedTime.setHours(parsedHour, minutes, 0, 0);
+
+      const now = new Date();
+      const onTime = now <= expectedTime;
+
+      // Step 4: Save attendance
+      const attendanceRecord = {
+        uid: scannedUid,
+        firstName: scannedUser.firstName,
+        lastName: scannedUser.lastName,
+        email: scannedUser.email,
+        phoneNumber: scannedUser.phone_number,
+        timeClockedIn: Timestamp.fromDate(now),
+        expectedTime: expectedTimeStr,
+        location: null, // optional
+        scannedBy: "ADMIN",
+        scannedById: user?.uid,
+        onTime,
+      };
+
+      await setDoc(attendanceRef, attendanceRecord);
+
+      Alert.alert(
+        "Success",
+        `${scannedUser.firstName} ${scannedUser.lastName} has been marked ${
+          onTime ? "on time" : "late"
+        }.`
+      );
+    } catch (error: any) {
+      console.error("Scan Error:", error);
+      Alert.alert("Error", "Something went wrong: " + error.message);
+    }
+  };
+
+  const handleUserScanSuccess = (scannedData: string) => {
+    setScannerVisible(false);
+    Alert.alert("QR Code Scanned", `User Scanned Data: ${scannedData}`);
+    // You can handle the scanned data here (e.g., verify attendance, navigate, etc.)
   };
 
   const formatTime = (date: Date) => {
@@ -406,6 +494,13 @@ export default function HomeScreen() {
           onConfirm={handleTimeConfirm}
           onCancel={hideTimePicker}
         />
+
+        {/* camera modal */}
+        <QRScanner
+          visible={scannerVisible}
+          onClose={() => setScannerVisible(false)}
+          onScan={handleAdminScanSuccess}
+        />
       </SafeAreaView>
     );
   }
@@ -425,15 +520,17 @@ export default function HomeScreen() {
           <Text style={styles.qrDescription}>
             Show this QR code to mark your attendance
           </Text>
-          <View style={styles.qrContainer} ref={userQrCodeRef}>
-            {userQRCode && (
-              <QRCode
-                value={userQRCode}
-                size={200}
-                color="#000000"
-                backgroundColor="#FFFFFF"
-              />
-            )}
+          <View style={styles.qrContainer}>
+            <View ref={userQrCodeRef} collapsable={false}>
+              {userQRCode && (
+                <QRCode
+                  value={userQRCode}
+                  size={200}
+                  color="#000000"
+                  backgroundColor="#FFFFFF"
+                />
+              )}
+            </View>
             <Text style={styles.qrInfo}>Your unique attendance code</Text>
             {/* Download Button for User QR */}
             <TouchableOpacity
@@ -458,6 +555,11 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <QRScanner
+        visible={scannerVisible}
+        onClose={() => setScannerVisible(false)}
+        onScan={handleUserScanSuccess}
+      />
     </SafeAreaView>
   );
 }

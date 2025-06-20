@@ -1,110 +1,228 @@
-// components/QRScanner.tsx
-import React, { useEffect,  useState } from 'react';
-import { Alert, Button, StyleSheet, Text, View } from 'react-native';
-import { CameraView,  useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getAuth } from 'firebase/auth';
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  SafeAreaView,
+} from "react-native";
+import { Camera, CameraView } from "expo-camera";
 
-interface AttendanceEntry {
-  sessionId: string;
-  staffId: string;
-  timestamp: string;
+interface QRScannerProps {
+  visible: boolean;
+  onClose: () => void;
+  onScan: (data: string) => void;
 }
 
-export const QRScanner: React.FC = () => {
-  const [permission, requestPermission] = useCameraPermissions();
-  const [scanned, setScanned] = useState<boolean>(false);
+const QRScanner: React.FC<QRScannerProps> = ({
+  visible,
+  onClose,
+  onScan,
+}) => {
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [scanned, setScanned] = useState(false);
 
   useEffect(() => {
-    if (!permission?.granted && !permission?.canAskAgain) {
-      requestPermission();
-    }
-  }, [permission, requestPermission]);
+    const getBarCodeScannerPermissions = async () => {
+      const { status } = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(status === "granted");
+    };
 
-  const handleBarCodeScanned = async (scanningResult: BarcodeScanningResult) => {
-    if (scanned) return;
-
-    const { data } = scanningResult;
-    setScanned(true);
-
-    const staffId = getAuth().currentUser?.uid;
-    const timestamp = new Date().toISOString();
-    const sessionId = data;
-
-    if (!staffId) {
-      Alert.alert('Error', 'User not authenticated');
+    if (visible) {
+      getBarCodeScannerPermissions();
       setScanned(false);
-      return;
     }
+  }, [visible]);
 
-    const newEntry: AttendanceEntry = { sessionId, staffId, timestamp };
-
-    try {
-      const stored = await AsyncStorage.getItem('attendance');
-      const entries: AttendanceEntry[] = stored ? JSON.parse(stored) : [];
-      entries.push(newEntry);
-      await AsyncStorage.setItem('attendance', JSON.stringify(entries));
-
-      Alert.alert('Scan Successful', `Signed in to session: ${sessionId}`);
-    } catch (error) {
-      console.error('Error saving locally', error);
-      Alert.alert('Storage Error', 'Could not save scan locally');
+  const handleBarCodeScanned = ({
+    type,
+    data,
+  }: {
+    type: string;
+    data: string;
+  }) => {
+    if (!scanned) {
+      setScanned(true);
+      onScan(data);
+      onClose();
     }
   };
 
-  if (!permission) {
-    return <Text>Requesting camera permission...</Text>;
+  const handleClose = () => {
+    setScanned(false);
+    onClose();
+  };
+
+  if (hasPermission === null) {
+    return (
+      <Modal visible={visible} animationType="slide">
+        <View style={styles.permissionContainer}>
+          <Text>Requesting camera permission...</Text>
+        </View>
+      </Modal>
+    );
   }
 
-  if (!permission.granted) {
+  if (hasPermission === false) {
     return (
-      <View style={styles.permissionContainer}>
-        <Text style={styles.permissionText}>We need your permission to show the camera</Text>
-        <Button onPress={requestPermission} title="Grant Permission" />
-      </View>
+      <Modal visible={visible} animationType="slide">
+        <SafeAreaView style={styles.permissionContainer}>
+          <Text style={styles.permissionText}>
+            Camera permission is required to scan QR codes
+          </Text>
+          <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+            <Text style={styles.closeButtonText}>Close</Text>
+          </TouchableOpacity>
+        </SafeAreaView>
+      </Modal>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <CameraView
-        style={StyleSheet.absoluteFillObject}
-        facing="back"
-        onBarcodeScanned={handleBarCodeScanned}
-        barcodeScannerSettings={{
-          barcodeTypes: ['qr'],
-        }}
-      />
-      {scanned && (
-        <View style={styles.buttonContainer}>
-          <Button title="Scan Again" onPress={() => setScanned(false)} />
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+    >
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Scan QR Code</Text>
+          <TouchableOpacity
+            onPress={handleClose}
+            style={styles.headerCloseButton}
+          >
+            <Text style={styles.headerCloseButtonText}>✕</Text>
+          </TouchableOpacity>
         </View>
-      )}
-    </View>
+
+        <View style={styles.cameraContainer}>
+          <CameraView
+            onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+            style={styles.camera}
+          >
+            <View style={styles.overlay}>
+              <View style={styles.scanArea}>
+                <View style={styles.scanFrame} />
+              </View>
+            </View>
+          </CameraView>
+        </View>
+
+        <View style={styles.instructions}>
+          <Text style={styles.instructionText}>
+            Position the QR code within the frame to scan
+          </Text>
+          {scanned && (
+            <TouchableOpacity
+              style={styles.rescanButton}
+              onPress={() => setScanned(false)}
+            >
+              <Text style={styles.rescanButtonText}>Tap to Scan Again</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </SafeAreaView>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1 
+  container: {
+    flex: 1,
+    backgroundColor: "#000",
   },
   permissionContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#000",
   },
   permissionText: {
-    textAlign: 'center',
+    color: "#fff",
+    textAlign: "center",
     marginBottom: 20,
     fontSize: 16,
   },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 40,
-    alignSelf: 'center',
-    backgroundColor: 'white',
-    borderRadius: 8,
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: "#000",
+  },
+  headerTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  headerCloseButton: {
     padding: 10,
   },
+  headerCloseButtonText: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  cameraContainer: {
+    flex: 1,
+  },
+  camera: {
+    flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "transparent",
+    flexDirection: "row",
+    margin: 30,
+    position:"absolute"
+  },
+  scanArea: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scanFrame: {
+    width: 250,
+    height: 250,
+    borderWidth: 2,
+    borderColor: "#00ff00",
+    backgroundColor: "transparent",
+    borderRadius: 10,
+  },
+  instructions: {
+    padding: 20,
+    backgroundColor: "#000",
+    alignItems: "center",
+  },
+  instructionText: {
+    color: "#fff",
+    textAlign: "center",
+    fontSize: 16,
+    marginBottom: 10,
+  },
+  closeButton: {
+    backgroundColor: "#007AFF",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
+  rescanButton: {
+    backgroundColor: "#007AFF",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  rescanButtonText: {
+    color: "#fff",
+    fontSize: 16,
+  },
 });
+
+export default QRScanner;
