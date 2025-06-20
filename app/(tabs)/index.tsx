@@ -31,7 +31,8 @@ interface QRCodeData {
 }
 
 export default function HomeScreen() {
-  const { user } = useAuth();
+  const auth = useAuth();
+  const user = auth.user as IUserBody | null;
   const [currentQRCode, setCurrentQRCode] = useState<QRCodeData | null>(null);
   const [userQRCode, setUserQRCode] = useState<string>("");
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
@@ -317,10 +318,113 @@ export default function HomeScreen() {
     }
   };
 
-  const handleUserScanSuccess = (scannedData: string) => {
+  const handleUserScanSuccess = async (scannedData: string) => {
     setScannerVisible(false);
-    Alert.alert("QR Code Scanned", `User Scanned Data: ${scannedData}`);
-    // You can handle the scanned data here (e.g., verify attendance, navigate, etc.)
+
+    const businessId = user?.businessId;
+    const business = user?.business;
+
+    if (!user || !businessId || !business) {
+      Alert.alert("Error", "Missing business or user information.");
+      return;
+    }
+
+    try {
+      // Step 1: Get QR Code record by matching the scanned code
+      const qrCodeRef = doc(db, "businesses", businessId, "qrCodes", "current");
+      const qrSnap = await getDoc(qrCodeRef);
+
+      if (!qrSnap.exists()) {
+        Alert.alert("Invalid QR", "QR code record not found.");
+        return;
+      }
+
+      const qrData = qrSnap.data();
+      const qrDataWithDates = {
+        ...qrData,
+        expiryDate: qrData.expiryDate.toDate().toISOString(),
+      } as QRCodeData;
+
+      if (qrData.code !== scannedData) {
+        Alert.alert(
+          "Invalid QR",
+          "Scanned QR code does not match current code."
+        );
+        return;
+      }
+
+      if (!qrData.isActive) {
+        Alert.alert("QR Inactive", "This QR code is no longer active.");
+        return;
+      }
+
+      const now = new Date();
+      console.log(qrDataWithDates.expiryDate, now);
+      if (qrDataWithDates.expiryDate < now) {
+        Alert.alert("Expired", "This QR code has expired.");
+        return;
+      }
+
+      // Step 2: Check if user already scanned in today
+      const yyyyMMdd = now.toISOString().split("T")[0];
+      const attendanceId = `${user.uid}_${yyyyMMdd}`;
+      const attendanceRef = doc(
+        db,
+        "businesses",
+        businessId,
+        "attendance",
+        attendanceId
+      );
+      const attendanceSnap = await getDoc(attendanceRef);
+
+      if (attendanceSnap.exists()) {
+        Alert.alert(
+          "Already Scanned",
+          "You’ve already marked attendance today."
+        );
+        return;
+      }
+
+      // Step 3: Determine expected arrival time
+      const expectedTimeStr =
+        user.expectedArrivalTime || business.expectedArrivalTime || "09:00 AM";
+
+      const expectedTime = new Date(now);
+      const [timePart, period] = expectedTimeStr.split(" ");
+      const [hours, minutes] = timePart.split(":").map(Number);
+
+      let parsedHour = hours;
+      if (period === "PM" && hours !== 12) parsedHour += 12;
+      if (period === "AM" && hours === 12) parsedHour = 0;
+
+      expectedTime.setHours(parsedHour, minutes, 0, 0);
+      const onTime = now <= expectedTime;
+
+      // Step 4: Create attendance record
+      const attendanceRecord = {
+        uid: user.uid,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phoneNumber: user.phone_number,
+        timeClockedIn: Timestamp.fromDate(now),
+        expectedTime: expectedTimeStr,
+        location: null, // optional, you can use geolocation here later
+        scannedBy: "USER",
+        scannedById: user.uid,
+        onTime,
+      };
+
+      await setDoc(attendanceRef, attendanceRecord);
+
+      Alert.alert(
+        "Attendance Marked",
+        `You have been marked ${onTime ? "on time" : "late"}.`
+      );
+    } catch (error: any) {
+      console.error("User Scan Error:", error);
+      Alert.alert("Error", "Something went wrong: " + error.message);
+    }
   };
 
   const formatTime = (date: Date) => {

@@ -26,7 +26,7 @@ export interface IBusiness {
   email: string;
   phone_number: string;
   expectedArrivalTime?: string;
-  bufferEnabled: boolean
+  bufferEnabled: boolean;
   bufferMinutes: number;
 }
 
@@ -44,4 +44,32 @@ export interface FormErrors {
   firstName?: string;
   lastName?: string;
   email?: string;
+}
+
+export interface IAttendanceRecord {
+  email: string;
+  expectedTime: string;
+  firstName: string;
+  lastName: string;
+  location: string | null; // null if not provided
+  onTime: boolean; // true if clocked in on time, false if late
+  phoneNumber: string; // phone number of the user
+  scannedBy: "USER" | "ADMIN"; // who scanned the QR code
+  scannedById: string; // uid of the user who scanned the QR code
+  timeClockedIn: Date;
+  uid: string; // uid of the user who clocked in
+}
+
+export interface DayAttendanceStatus {
+  date: string;
+  status: "onTime" | "late" | "absent";
+  record?: IAttendanceRecord;
+}
+
+export interface AdminDayRecord {
+  date: string;
+  totalRecords: number;
+  onTimeCount: number;
+  lateCount: number;
+  records: IAttendanceRecord[];
 }

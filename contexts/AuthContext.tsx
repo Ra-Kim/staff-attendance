@@ -43,7 +43,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setIsAuthenticated(true);
     await AsyncStorage.setItem("auth_user", JSON.stringify(userData));
     await AsyncStorage.setItem("is_authenticated", "true");
-    router.replace("/(tabs)")
+    router.replace("/(tabs)");
   };
 
   const logout = async () => {
@@ -65,7 +65,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setIsAuthenticated(true);
         } else {
           setIsAuthenticated(false);
-          logout()
+          logout();
         }
       } catch (error) {
         console.error("Error loading auth state:", error);
@@ -77,8 +77,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     loadAuthState();
   }, []);
-
-  
 
   const toggleAuth = () => {
     const newState = !isAuthenticated;
