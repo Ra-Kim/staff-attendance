@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -14,11 +14,10 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import type { DayAttendanceStatus, AdminDayRecord } from "@/types";
 import { useAttendanceRecords } from "@/hooks/useAttendanceRecords";
-import { Calendar, LocaleConfig } from "react-native-calendars";
+import { Calendar } from "react-native-calendars";
 
 export default function RecordsScreen() {
   const { user } = useAuth();
-  const [selectedDate, setSelectedDate] = useState<string>("");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [markedDates, setMarkedDates] = useState({});
 
