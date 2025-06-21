@@ -125,7 +125,7 @@ export default function BusinessScreen() {
     >
       <TouchableOpacity
         style={styles.menuButton}
-        onPress={() => handleMenuPress(item.route)}
+        onPress={() => (item.subItems ? () => {} : handleMenuPress(item.route))}
       >
         <View style={styles.menuContent}>
           <View style={styles.menuLeft}>
@@ -146,7 +146,7 @@ export default function BusinessScreen() {
               </Text>
             </View>
           </View>
-          <Text style={styles.menuArrow}>›</Text>
+          {!item.subItems && <Text style={styles.menuArrow}>›</Text>}
         </View>
       </TouchableOpacity>
 
@@ -230,6 +230,7 @@ const styles = StyleSheet.create({
   subMenuItem: {
     marginBottom: 8,
     marginLeft: 20,
+    marginRight: 10,
     backgroundColor: "#F8F8F8",
     borderColor: "#D0D0D0",
     shadowOpacity: 0.05,

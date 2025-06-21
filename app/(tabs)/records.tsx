@@ -18,7 +18,7 @@ import { Calendar } from "react-native-calendars";
 
 export default function RecordsScreen() {
   const { user } = useAuth();
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [markedDates, setMarkedDates] = useState({});
 
   const [showModal, setShowModal] = useState(false);
@@ -33,7 +33,9 @@ export default function RecordsScreen() {
 
   useEffect(() => {
     // Fetch records for the current month
-    fetchMonth(currentMonth.getFullYear(), currentMonth.getMonth());
+    if (currentMonth) {
+      fetchMonth(currentMonth.getFullYear(), currentMonth.getMonth() + 1);
+    }
   }, [currentMonth, fetchMonth]);
 
   useEffect(() => {
@@ -326,19 +328,25 @@ export default function RecordsScreen() {
               todayTextColor: "#00adf5",
             }}
           />
-           <View style={styles.summaryContainer}>
+          <View style={styles.summaryContainer}>
             <Text style={styles.summaryTitle}>Attendance Summary</Text>
             <View style={styles.summaryGrid}>
               <View style={[styles.summaryCard, styles.onTimeCard]}>
-                <Text style={styles.summaryNumber}>{userHistory.filter((d) => d.status === "onTime").length}</Text>
+                <Text style={styles.summaryNumber}>
+                  {userHistory.filter((d) => d.status === "onTime").length}
+                </Text>
                 <Text style={styles.summaryLabel}>On Time</Text>
               </View>
               <View style={[styles.summaryCard, styles.lateCard]}>
-                <Text style={styles.summaryNumber}>{userHistory.filter((d) => d.status === "late").length}</Text>
+                <Text style={styles.summaryNumber}>
+                  {userHistory.filter((d) => d.status === "late").length}
+                </Text>
                 <Text style={styles.summaryLabel}>Late</Text>
               </View>
               <View style={[styles.summaryCard, styles.absentCard]}>
-                <Text style={styles.summaryNumber}>{userHistory.filter((d) => d.status === "absent").length}</Text>
+                <Text style={styles.summaryNumber}>
+                  {userHistory.filter((d) => d.status === "absent").length}
+                </Text>
                 <Text style={styles.summaryLabel}>Absent</Text>
               </View>
             </View>

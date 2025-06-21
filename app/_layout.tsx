@@ -14,6 +14,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { auth } from "@/backend/firebase";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Provider } from "react-native-paper";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 function LayoutRouter() {
   const { isAuthenticated, isLoading, logout, user } = useAuth();
@@ -66,13 +67,16 @@ function LayoutRouter() {
 }
 
 export default function RootLayoutScreen() {
+  const queryClient = new QueryClient();
   return (
-    <AuthProvider>
-      <Provider>
-        <GestureHandlerRootView style={{ flex: 1 }}>
-          <LayoutRouter />
-        </GestureHandlerRootView>
-      </Provider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Provider>
+          <GestureHandlerRootView style={{ flex: 1 }}>
+            <LayoutRouter />
+          </GestureHandlerRootView>
+        </Provider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }

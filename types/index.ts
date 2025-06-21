@@ -73,3 +73,19 @@ export interface AdminDayRecord {
   lateCount: number;
   records: IAttendanceRecord[];
 }
+
+export interface UserReport {
+  uid: string
+  firstName: string
+  lastName: string
+  email: string
+  expectedTime: string
+  averageArrivalTime: string
+  punctualityRate: number // percentage of on-time arrivals
+  attendanceRate: number // percentage of days attended
+  overallRating: "Excellent" | "Good" | "Fair" | "Poor"
+  totalRecords: number
+  onTimeRecords: number
+  lateRecords: number
+  workingDays?: number // total expected working days in period
+}
