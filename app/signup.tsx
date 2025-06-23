@@ -200,6 +200,15 @@ export default function SignUpScreen() {
           bufferMinutes: 15, // Default value
           adminId: uid,
           createdAt: String(dayjs().toDate()),
+          workingDays: {
+            monday: true,
+            tuesday: true,
+            wednesday: true,
+            thursday: true,
+            friday: true,
+            saturday: false,
+            sunday: false,
+          },
         },
         businessId,
       });

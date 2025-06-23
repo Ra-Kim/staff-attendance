@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -21,20 +21,7 @@ import dayjs from "dayjs";
 import AppHeader from "@/components/AppHeader";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/backend/firebase";
-
-export interface IBusiness {
-  address: string;
-  adminId: string;
-  businessId: string;
-  business_name: string;
-  business_type: string;
-  createdAt: string;
-  email: string;
-  phone_number: string;
-  expectedArrivalTime?: string;
-  bufferMinutes?: number;
-  bufferEnabled?: boolean;
-}
+import { IBusiness, WorkingDays } from "@/types";
 
 const InfoField = ({
   label,
@@ -78,10 +65,6 @@ export default function BusinessInfoScreen() {
     useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  useEffect(() => {
-    console.log(user?.business);
-  }, [user?.business]);
-
   const [isTimePickerVisible, setTimePickerVisible] = useState(false);
   const showTimePicker = () => setTimePickerVisible(true);
   const hideTimePicker = () => setTimePickerVisible(false);
@@ -111,6 +94,15 @@ export default function BusinessInfoScreen() {
     expectedArrivalTime: user?.business?.expectedArrivalTime || "",
     bufferMinutes: user?.business?.bufferMinutes || 0,
     bufferEnabled: user?.business?.bufferEnabled || false,
+    workingDays: user?.business?.workingDays || {
+      monday: true,
+      tuesday: true,
+      wednesday: true,
+      thursday: true,
+      friday: true,
+      saturday: false,
+      sunday: false,
+    },
   });
 
   const [editedData, setEditedData] = useState<IBusiness>(businessData);
@@ -134,7 +126,6 @@ export default function BusinessInfoScreen() {
         ...editedData,
         updatedAt: new Date(),
       };
-
 
       // Update in Firestore
       await updateDoc(businessRef, updatedData);
@@ -165,13 +156,26 @@ export default function BusinessInfoScreen() {
     setIsEditing(false);
   };
 
+  const toggleWorkingDay = useCallback(
+    (day: keyof WorkingDays) => {
+      if (!isEditing) return;
+      setEditedData((prev) => ({
+        ...prev,
+        workingDays: {
+          ...prev.workingDays!,
+          [day]: !prev.workingDays![day],
+        },
+      }));
+    },
+    [isEditing]
+  );
+
   const updateField = useCallback((field: string, value: any) => {
     setEditedData((prev) => ({
       ...prev,
       [field]: value,
     }));
   }, []);
-
 
   return (
     <>
@@ -389,6 +393,72 @@ export default function BusinessInfoScreen() {
                 </Text>
               </View>
             )}
+
+            {/* Working Days Selection */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Working Days</Text>
+              <Text style={styles.fieldDescription}>
+                Select the days your business operates
+              </Text>
+              <View style={styles.workingDaysContainer}>
+                {[
+                  "monday",
+                  "tuesday",
+                  "wednesday",
+                  "thursday",
+                  "friday",
+                  "saturday",
+                  "sunday",
+                ].map((day) => {
+                  const isSelected = (
+                    isEditing
+                      ? editedData.workingDays
+                      : businessData.workingDays
+                  )?.[day as keyof WorkingDays];
+                  return (
+                    <TouchableOpacity
+                      key={day}
+                      style={[
+                        styles.dayButton,
+                        isSelected && styles.dayButtonSelected,
+                        !isEditing && styles.dayButtonDisabled,
+                      ]}
+                      onPress={() => toggleWorkingDay(day as keyof WorkingDays)}
+                      disabled={!isEditing}
+                    >
+                      <Text
+                        style={[
+                          styles.dayButtonText,
+                          isSelected && styles.dayButtonTextSelected,
+                        ]}
+                      >
+                        {day.charAt(0).toUpperCase() + day.slice(1, 3)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+              {!isEditing && (
+                <Text style={styles.fieldDescription}>
+                  Selected days:{" "}
+                  {[
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
+                  ]
+                    .filter(
+                      (day) =>
+                        businessData.workingDays?.[day as keyof WorkingDays]
+                    )
+                    .map((day) => day.charAt(0).toUpperCase() + day.slice(1))
+                    .join(", ") || "None"}
+                </Text>
+              )}
+            </View>
           </View>
 
           {/* System Information Section */}
@@ -610,5 +680,36 @@ const styles = StyleSheet.create({
     borderColor: "#CCCCCC",
     borderRadius: 8,
     backgroundColor: "#FFFFFF",
+  },
+  workingDaysContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginVertical: 10,
+  },
+  dayButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#CCCCCC",
+    backgroundColor: "#FFFFFF",
+    minWidth: 45,
+    alignItems: "center",
+  },
+  dayButtonSelected: {
+    backgroundColor: "#000000",
+    borderColor: "#000000",
+  },
+  dayButtonDisabled: {
+    opacity: 0.6,
+  },
+  dayButtonText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#666666",
+  },
+  dayButtonTextSelected: {
+    color: "#FFFFFF",
   },
 });

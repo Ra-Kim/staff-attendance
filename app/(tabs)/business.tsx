@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
+import BestPerformersScreen from "../business/reports/best";
 
 interface BusinessMenuItem {
   id: string;
@@ -25,25 +26,7 @@ export default function BusinessScreen() {
   const { user } = useAuth();
 
   if (user?.isAdmin !== true) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.accessDeniedContainer}>
-          <View style={styles.accessDeniedContent}>
-            <Text style={styles.accessDeniedIcon}>🔒</Text>
-            <Text style={styles.accessDeniedTitle}>Admin Access Required</Text>
-            <Text style={styles.accessDeniedMessage}>
-              This section is only available for administrators. Please contact
-              your admin if you need access to business management features.
-            </Text>
-            <View style={styles.accessDeniedInfo}>
-              <Text style={styles.accessDeniedInfoText}>
-                Current Role: {user?.isAdmin ? "Admin" : "User"}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </SafeAreaView>
-    );
+    return <BestPerformersScreen />;
   }
 
   const businessMenuItems: BusinessMenuItem[] = [
@@ -102,6 +85,13 @@ export default function BusinessScreen() {
           subtitle: "Employees needing attention",
           icon: "⚠️",
           route: "/business/reports/worst",
+        },
+        {
+          id: "late-summary",
+          title: "Late Arrivals Summary",
+          subtitle: "Sumamry of late arrivals",
+          icon: "🛑",
+          route: "/business/reports/late",
         },
       ],
     },

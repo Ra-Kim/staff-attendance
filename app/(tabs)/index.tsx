@@ -216,6 +216,31 @@ export default function HomeScreen() {
     setScannerVisible(true);
   };
 
+  const computeBufferedExpectedTime = (
+    expectedTimeStr: string,
+    bufferEnabled: boolean,
+    bufferMinutes?: number
+  ): Date => {
+    const now = new Date();
+    const expectedTime = new Date(now); // today's date
+
+    const [timePart, period] = expectedTimeStr.split(" ");
+    const [hours, minutes] = timePart.split(":").map(Number);
+
+    let parsedHour = hours;
+    if (period === "PM" && hours !== 12) parsedHour += 12;
+    if (period === "AM" && hours === 12) parsedHour = 0;
+
+    expectedTime.setHours(parsedHour, minutes, 0, 0);
+
+    if (bufferEnabled) {
+      const buffer = typeof bufferMinutes === "number" ? bufferMinutes : 15;
+      expectedTime.setMinutes(expectedTime.getMinutes() + buffer);
+    }
+
+    return expectedTime;
+  };
+
   const handleAdminScanSuccess = async (scannedData: string) => {
     setScannerVisible(false);
 
@@ -275,16 +300,11 @@ export default function HomeScreen() {
         business.expectedArrivalTime ||
         "09:00 AM";
 
-      // Create a Date object with today’s date and parsed time
-      const expectedTime = new Date(today); // today's date
-      const [timePart, period] = expectedTimeStr.split(" "); // "7:00", "AM"
-      const [hours, minutes] = timePart.split(":").map(Number);
-
-      let parsedHour = hours;
-      if (period === "PM" && hours !== 12) parsedHour += 12;
-      if (period === "AM" && hours === 12) parsedHour = 0;
-
-      expectedTime.setHours(parsedHour, minutes, 0, 0);
+      const expectedTime = computeBufferedExpectedTime(
+        expectedTimeStr,
+        business.bufferEnabled,
+        business.bufferMinutes
+      );
 
       const now = new Date();
       const onTime = now <= expectedTime;
@@ -359,7 +379,7 @@ export default function HomeScreen() {
       }
 
       const now = new Date();
-      console.log(qrDataWithDates.expiryDate, now);
+      // Check if QR code is expired
       if (qrDataWithDates.expiryDate < now) {
         Alert.alert("Expired", "This QR code has expired.");
         return;
@@ -389,15 +409,12 @@ export default function HomeScreen() {
       const expectedTimeStr =
         user.expectedArrivalTime || business.expectedArrivalTime || "09:00 AM";
 
-      const expectedTime = new Date(now);
-      const [timePart, period] = expectedTimeStr.split(" ");
-      const [hours, minutes] = timePart.split(":").map(Number);
+      const expectedTime = computeBufferedExpectedTime(
+        expectedTimeStr,
+        business.bufferEnabled,
+        business.bufferMinutes
+      );
 
-      let parsedHour = hours;
-      if (period === "PM" && hours !== 12) parsedHour += 12;
-      if (period === "AM" && hours === 12) parsedHour = 0;
-
-      expectedTime.setHours(parsedHour, minutes, 0, 0);
       const onTime = now <= expectedTime;
 
       // Step 4: Create attendance record

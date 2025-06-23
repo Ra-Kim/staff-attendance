@@ -16,6 +16,16 @@ export interface IUserBody extends IUser {
   status?: "active" | "inactive";
   profilePicture?: string;
 }
+
+export interface WorkingDays {
+  monday: boolean
+  tuesday: boolean
+  wednesday: boolean
+  thursday: boolean
+  friday: boolean
+  saturday: boolean
+  sunday: boolean
+}
 export interface IBusiness {
   address: string;
   adminId: string;
@@ -28,7 +38,10 @@ export interface IBusiness {
   expectedArrivalTime?: string;
   bufferEnabled: boolean;
   bufferMinutes: number;
+  workingDays: WorkingDays;
 }
+
+
 
 export interface UserFormData {
   firstName: string;
@@ -74,18 +87,19 @@ export interface AdminDayRecord {
   records: IAttendanceRecord[];
 }
 
+
 export interface UserReport {
-  uid: string
-  firstName: string
-  lastName: string
-  email: string
-  expectedTime: string
-  averageArrivalTime: string
-  punctualityRate: number // percentage of on-time arrivals
-  attendanceRate: number // percentage of days attended
-  overallRating: "Excellent" | "Good" | "Fair" | "Poor"
-  totalRecords: number
-  onTimeRecords: number
-  lateRecords: number
-  workingDays?: number // total expected working days in period
+  uid: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  expectedTime: string;
+  averageArrivalTime: string;
+  punctualityRate: number;
+  attendanceRate: number;
+  overallRating: "Excellent" | "Good" | "Fair" | "Poor";
+  totalRecords: number;
+  onTimeRecords: number;
+  lateRecords: number;
+  workingDays: number;
 }

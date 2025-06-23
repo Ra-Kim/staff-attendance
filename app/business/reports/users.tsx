@@ -69,6 +69,15 @@ export default function UserReportsScreen() {
     endDate,
     user?.businessId || "",
     searchQuery,
+    user?.business?.workingDays || {
+      monday: true,
+      tuesday: true,
+      wednesday: true,
+      thursday: true,
+      friday: true,
+      saturday: false,
+      sunday: false,
+    },
     ratingFilter,
     sortBy,
     sortOrder
